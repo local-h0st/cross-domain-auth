@@ -6,5 +6,9 @@
 
 https://youtube.com/shorts/y0cxkflRHto?feature=share
 
-#### HandleMsgForPseudo(cipher string)
+#### func (s *SmartContract) HandleMsgForPseudo(ctx contractapi.TransactionContextInterface, cipher_text string) error
 该函数传参的cihper_text原文为message的JSON字符串，采用RSA方案，用node_id为tag的背书节点的公钥加密得到cipher_text
+
+
+#### func verifyIDinSGX(cipher string) bool 
+情况比我预想的要好，golang也能够直接和SGX交互，不需要单独拿C写一个程序然后外部调用。
