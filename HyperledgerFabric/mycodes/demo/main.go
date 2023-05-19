@@ -1,86 +1,87 @@
 package main
 
 import (
-	"crypto/rsa"
 	"encoding/json"
-	"log"
-	"net"
+	"fmt"
 	"os"
+	"time"
 
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
 var node_id string = os.Getenv("NODE_ID")
-var pk rsa.PublicKey // 不知道公钥是不是这个类型，记得初始化
+var node_pk string // 不知道公钥是不是这个类型，记得初始化
 
 type SmartContract struct {
 	contractapi.Contract
 }
 
-// https://youtube.com/shorts/y0cxkflRHto?feature=share
-
-type InfoRecord struct {
-	PID       string `json:"PID"`
-	Valid     bool
-	PK_pid    string `json:"PK_pid`
-	Timestamp int
+// 不要ID了，直接拿PID当成索引
+type PseudoRecord struct {
+	IsValid   bool   `json:"IsValid`
+	PK        string `json:"PK"` // 代表此pid设备期望以后和某个域通信时用的公钥，感觉不需要公开是哪一个域
+	Timestamp string `json:"Timestamp"`
 }
 
-// 监听端口，收到消息 就开一个goroutine去处理
-func handleReq(conn net.Conn) {
-	buf := make([]byte, 1024)
-	for {
-		n, err := conn.Read(buf)
-		if err != nil {
-			log.Fatal(err)
-		}
-		cipher := string(buf[:n])
-	}
-	// msg 先rsa解密，这里没写，因此测试的时候不应该加密
-	msg := cipher
-	// msg 按照 json的格式存储
-	type common_msg struct {
-		pid string
-		p   interface{} // 门限签名技术的那个点，我也不知道用什么格式存储
+func (s *SmartContract) InitLedger(ctx contractapi.TransactionContextInterface) error {
+	recordJSON, _ := json.Marshal(PseudoRecord{
+		false,
+		"the record for init.",
+		time.Now().Format("2006-01-02 15:04:05"),
+	}) // 懒得写err了，这里总不可能出错吧
+	return ctx.GetStub().PutState("redh3tALWAYS", recordJSON)
+}
 
-	}
-	type tag_msg struct {
+func (s *SmartContract) HandleMsgForPseudo(ctx contractapi.TransactionContextInterface, cipher_text string) error {
+	// msg 先rsa解密，这里暂时没写，因此测试的时候不应该加密
+	msg_text := cipher_text
+
+	type message struct {
 		pid               string
-		p                 interface{}
-		tag               string // node_id
+		p                 interface{} // // 门限签名技术的那个点，我也不知道用什么格式存储
+		tag               string      // node_id
 		id_cphier         string
-		pk_device2domamin rsa.PublicKey // 不知道公钥是不是这个类型，建议本地存储？存到数据库吧，还是存到内存算了
+		pk_device2domamin string // 不知道公钥是这哪个类型。另外是建议存到数据库，还是存到内存算了？
 	}
-	var con_m common_msg
-	var tag_m tag_msg
-	var msg_type bool
-	err := json.Unmarshal(msg, &con_m)
+
+	// msg_text被解析到msg结构内
+	var msg message
+	err := json.Unmarshal([]byte(msg_text), &msg)
 	if err != nil {
-		err = json.Unmarshal(msg, &tag_m)
-		if err != nil {
-			panic("json unmarshal collapsed.")
-		} else {
-			msg_type = true
-		}
-	}
-	var InfoRecord
-	if msg_type { // 是 tag 节点
-		if tag_m.tag != node_id {
-			panic("tag doesnt match node id.")
-		}
-		// golang可以直接和Intel SGX交互！！！！！！！！！
-
-	} else {
-		storeMsg(msg)
+		return fmt.Errorf("In func HandleMsgForPseudo(): json unmarshal failed.")
 	}
 
+	// 判断pid是否已经存在
+	assetJSON, err := ctx.GetStub().GetState(msg.pid)
+	if err != nil {
+		return fmt.Errorf("In func HandleMsgForPseudo(): get state failed.")
+	}
+	if assetJSON != nil {
+		return fmt.Errorf("In func HandleMsgForPseudo(): pseudo already exists.")
+	}
+
+	// 非tag node直接存储，tag node需要和sgx交互
+	if msg.tag != node_id {
+		return storeMsg(msg_text)
+	}
+	var rcd PseudoRecord
+	rcd.IsValid = verifyIDinSGX(msg.id_cphier)
+	rcd.Timestamp = time.Now().Format("2006-01-02 15:04:05")
+	rcd.PK = msg.pk_device2domamin
+	assetJSON, err = json.Marshal(rcd)
+	if err != nil {
+		return fmt.Errorf("In func HandleMsgForPseudo(): json marshal failed.")
+	}
+	return ctx.GetStub().PutState(msg.pid, assetJSON)
 }
 
-func storeMsg(m string) {
+func storeMsg(m string) error {
 	// 用于存储pid和点p，以json的格式
+	return nil
 }
 
 func verifyIDinSGX(cipher string) bool {
 	// 在enclave内部解密核验是否在黑名单上，true表示合法
+	// 出错了一律直接false
 	return true
 }
