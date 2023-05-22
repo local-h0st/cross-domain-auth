@@ -17,3 +17,6 @@ https://youtube.com/shorts/y0cxkflRHto?feature=share
 
 #### func verifyIDinSGX(cipher string) bool 
 情况比我预想的要好，golang也能够直接和SGX交互，不需要单独拿C写一个程序然后外部调用。
+
+#### about Level DB
+InitLedger时在公开的账本上指明了database的地址是./db，但是同样的地址在不同peer上的库文件内容是不同的，因此满足需求

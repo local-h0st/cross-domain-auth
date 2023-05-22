@@ -7,14 +7,15 @@ import (
 	"time"
 
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"github.com/syndtr/goleveldb/leveldb"
 )
-
-var node_id string = os.Getenv("NODE_ID")
-var node_pk string // 不知道公钥是不是这个类型，记得初始化
 
 type SmartContract struct {
 	contractapi.Contract
 }
+
+var node_id string = os.Getenv("NODE_ID")
+var node_pk string // 不知道公钥是不是这个类型，记得初始化
 
 // 不要ID了，直接拿PID当成索引
 type PseudoRecord struct {
@@ -29,7 +30,16 @@ func (s *SmartContract) InitLedger(ctx contractapi.TransactionContextInterface) 
 		"the record for init.",
 		time.Now().Format("2006-01-02 15:04:05"),
 	}) // 懒得写err了，这里总不可能出错吧
-	return ctx.GetStub().PutState("redh3tALWAYS", recordJSON)
+	ctx.GetStub().PutState("redh3tALWAYS", recordJSON)
+
+	// 初始化leveldb
+	_, err := leveldb.OpenFile("./db", nil)
+	if err != nil {
+		return fmt.Errorf("In func InitLedger(): init level db failed.")
+	}
+	ctx.GetStub().PutState("db", []byte("./db"))
+
+	return nil
 }
 
 func (s *SmartContract) HandleMsgForPseudo(ctx contractapi.TransactionContextInterface, cipher_text string) error {
@@ -77,6 +87,8 @@ func (s *SmartContract) HandleMsgForPseudo(ctx contractapi.TransactionContextInt
 
 func storeMsg(m string) error {
 	// 用于存储pid和点p，以json的格式
+	// 这里我选择LevelDB - Fabric自带的内嵌键值存储数据库,可以直接在chaincode中使用。但是数据只保存在一个peer节点上,不可持久化。
+
 	return nil
 }
 
