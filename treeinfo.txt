@@ -1,0 +1,99 @@
+.
+├── dev.sh
+├── go
+│   └── pkg
+│       └── mod
+├── HyperledgerFabric
+│   ├── fabric
+│   │   ├── bccsp
+│   │   ├── build
+│   │   ├── ccaas_builder
+│   │   ├── ch1.block
+│   │   ├── ch1.tx
+│   │   ├── CHANGELOG.md
+│   │   ├── ci
+│   │   ├── cmd
+│   │   ├── CODE_OF_CONDUCT.md
+│   │   ├── CODEOWNERS
+│   │   ├── common
+│   │   ├── CONTRIBUTING.md
+│   │   ├── core
+│   │   ├── discovery
+│   │   ├── docker-env.mk
+│   │   ├── docs
+│   │   ├── go.mod
+│   │   ├── gossip
+│   │   ├── go.sum
+│   │   ├── gotools.mk
+│   │   ├── images
+│   │   ├── integration
+│   │   ├── internal
+│   │   ├── LICENSE
+│   │   ├── MAINTAINERS.md
+│   │   ├── Makefile
+│   │   ├── msp
+│   │   ├── NOTICE
+│   │   ├── orderer
+│   │   ├── pkg
+│   │   ├── protoutil
+│   │   ├── README.md
+│   │   ├── release_notes
+│   │   ├── sampleconfig
+│   │   ├── scripts
+│   │   ├── SECURITY.md
+│   │   ├── simpleChaincode
+│   │   ├── staticcheck.conf
+│   │   ├── swagger
+│   │   ├── tools
+│   │   ├── tox.ini
+│   │   ├── vagrant
+│   │   └── vendor
+│   ├── fabric-samples
+│   │   ├── asset-transfer-abac
+│   │   ├── asset-transfer-basic
+│   │   ├── asset-transfer-events
+│   │   ├── asset-transfer-ledger-queries
+│   │   ├── asset-transfer-private-data
+│   │   ├── asset-transfer-sbe
+│   │   ├── asset-transfer-secured-agreement
+│   │   ├── auction-dutch
+│   │   ├── auction-simple
+│   │   ├── bin
+│   │   ├── builders
+│   │   ├── CHANGELOG.md
+│   │   ├── ci
+│   │   ├── CODE_OF_CONDUCT.md
+│   │   ├── CODEOWNERS
+│   │   ├── config
+│   │   ├── CONTRIBUTING.md
+│   │   ├── full-stack-asset-transfer-guide
+│   │   ├── hardware-security-module
+│   │   ├── high-throughput
+│   │   ├── LICENSE
+│   │   ├── MAINTAINERS.md
+│   │   ├── off_chain_data
+│   │   ├── README.md
+│   │   ├── SECURITY.md
+│   │   ├── test-application
+│   │   ├── test-network
+│   │   ├── test-network-k8s
+│   │   ├── test-network-nano-bash
+│   │   ├── token-erc-1155
+│   │   ├── token-erc-20
+│   │   ├── token-erc-721
+│   │   └── token-utxo
+│   ├── install-fabric.sh
+│   ├── mycodes
+│   │   ├── atcc
+│   │   ├── demo
+│   │   ├── gengerate_json_tool
+│   │   ├── send_msg_tool
+│   │   └── server_vs
+│   └── myshells
+│       └── devModOn
+├── README.md
+├── records.md
+├── sendMsg
+└── treeinfo.txt
+
+63 directories, 33 files
