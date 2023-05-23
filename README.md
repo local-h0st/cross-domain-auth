@@ -11,7 +11,9 @@
 
 [contract-api-go仓库](https://github.com/hyperledger/fabric-contract-api-go)，内含使用contract-api-go编写chaincode的教程
 
-[fabric-samples仓库](https://github.com/hyperledger/fabric-samples)，包含多项可供参考的示例代码，记得切换branch
+[fabric-sdk-go仓库](https://github.com/hyperledger/fabric-sdk-go)，开发Fabric App必看
+
+[fabric-samples仓库](https://github.com/hyperledger/fabric-samples)，含多项可供参考的示例代码包括chaincode和Fabric App，记得切换branch
 
 还有一个github.io的Fabric[中文文档](https://hyperledger.github.io/)（欸好像不是这个网址），不过看着好像没什么用
 
