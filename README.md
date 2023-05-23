@@ -1,6 +1,6 @@
 # Project cross-domain-auth "AlternateWorld"
 
-🔰**当前进度：**chaincode写了一半，跑在VS上的Fabric App也开了个头，需要用fabric-sdk-go和chaincode交互，问题是chaincode之前是在devMod上跑的，没有任何的peer，sdk交互起来好像有点问题，所以先拿atcc的chaincode去部署一个测试网络
+㊙️当前进度：chaincode写了一半，跑在VS上的Fabric App也开了个头，需要用fabric-sdk-go和chaincode交互，问题是chaincode之前是在devMod上跑的，没有任何的peer，sdk交互起来好像有点问题，所以先拿atcc的chaincode去部署一个测试网络
 
 这个项目是做跨域认证的，基于Hyperledger Fabric 2.5，采用Intel SGX作为Truetsed Execution Environment的硬件支持。
 
@@ -65,7 +65,7 @@ CORE_PEER_ADDRESS=127.0.0.1:7051 peer chaincode invoke -o 127.0.0.1:7050 -C ch1 
 ## 项目结构
 整个项目应该是需要编写链码、VS上的服务端程序、PAS上的服务端程序，device上的用户程序。
 由于服务端程序涉及到调用智能合约，因此也属于DApp的范畴，这部分需要用到相关的go sdk开发
-链码直接采用`contractap`i，而不是`shim`包，因为据官方文档说shim更加初级，有可能会有奇奇怪怪的问题。
+链码直接采用`contractapi`，而不是`shim`包，因为据官方文档说shim更加初级，有可能会有奇奇怪怪的问题。
 在`~/HyperledgerFabric/mycodes/demo`目录下存放的是链码的源代码，目前只是写了一个大致的框架。其他的服务端程序尚未开始开发。demo目录以后想起来了再改个名，比如改成demo_chaincode之类的
 
 *建议别看中文文档，会变得不幸...直接看英文文档会更加新，也会少很多坑*
