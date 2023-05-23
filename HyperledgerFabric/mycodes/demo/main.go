@@ -13,12 +13,26 @@ type SmartContract struct {
 	contractapi.Contract
 }
 
-// 不要ID了，直接拿PID当成索引
 type PseudoRecord struct {
+	// 不要ID了，直接拿PID当成索引
 	IsValid   bool   `json:"IsValid`
 	PK        string `json:"PK"` // 代表此pid设备期望以后和某个域通信时用的公钥，感觉不需要公开是哪一个域
 	Timestamp string `json:"Timestamp"`
 }
+
+func (s *SmartContract) CheckExistance(ctx contractapi.TransactionContextInterface, pid string) (bool, error) {
+	assetJSON, err := ctx.GetStub().GetState(pid)
+	if err != nil {
+		return false, fmt.Errorf("In CheckExistance(): get state failed.")
+	} else if assetJSON != nil {
+		return true, nil
+	} else {
+		// pid不存在
+		return false, nil
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////
 
 func (s *SmartContract) InitLedger(ctx contractapi.TransactionContextInterface) error {
 	recordJSON, _ := json.Marshal(PseudoRecord{

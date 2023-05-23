@@ -1,4 +1,7 @@
 # Project cross-domain-auth "AlternateWorld"
+
+🔰**当前进度：**chaincode写了一半，跑在VS上的Fabric App也开了个头，需要用fabric-sdk-go和chaincode交互，问题是chaincode之前是在devMod上跑的，没有任何的peer，sdk交互起来好像有点问题，所以先拿atcc的chaincode去部署一个测试网络
+
 这个项目是做跨域认证的，基于Hyperledger Fabric 2.5，采用Intel SGX作为Truetsed Execution Environment的硬件支持。
 
 🎉首先庆祝第一阶段顺利结束！接下来就是搭环境写代码的实现阶段了。
@@ -18,8 +21,7 @@
 还有一个github.io的Fabric[中文文档](https://hyperledger.github.io/)（欸好像不是这个网址），不过看着好像没什么用
 
 ## TODO & done
-* [ ] 编写chaincode，tutorial参考👆
-* [ ] 写DApps和ClientApp
+* [ ] 编写chaincode，Fabric Apps和ClientApptutorial参考👆
 * [ ] 有必要看一看Key Concepts
 
 * [x] 自己写chaincode测试，数据用my favorite songs

@@ -1,15 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
 	"os"
-	"serverVS/tools/rsatool"
 )
 
 func main() {
-	rsatool.UnitTest()
+	// 生成pk和sk
 	// 需要公布自己的pk，直接上链
 	ln, err := net.Listen("tcp", ":54321")
 	if err != nil {
@@ -51,7 +51,22 @@ var node_id string = os.Getenv("NODE_ID")
 var node_sk []byte
 var node_pk []byte
 
-func handleMsg(cipher string) {
-	// 事实上收到的是加密后的密文，需要用node_sk解密
+func handleMsg(cipher string) error {
+	// 事实上收到的是加密后的密文，需要用node_sk解密，这里暂时没写
+	msg_text := cipher
+	type message struct {
+		PID              string
+		P                string // // 门限签名技术的那个点，我也不知道用什么格式存储
+		Tag              string // node_id
+		ID_cipher        string
+		PK_device2domain string // 不知道公钥是这哪个类型。另外是建议存到数据库，还是存到内存算了？
+	}
+	var msg message
+	err := json.Unmarshal([]byte(msg_text), &msg)
+	if err != nil {
+		return fmt.Errorf("In func HandleMsgForPseudo(): json unmarshal failed.")
+	}
+	// 查询pid是否存在
 
+	return nil
 }
