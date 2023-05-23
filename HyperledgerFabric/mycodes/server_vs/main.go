@@ -4,11 +4,29 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
+	"serverVS/tools/rsatool"
 )
+
+func main() {
+	rsatool.UnitTest()
+	// 需要公布自己的pk，直接上链
+	ln, err := net.Listen("tcp", ":54321")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	for {
+		conn, err := ln.Accept()
+		if err != nil {
+			continue
+		}
+		go handleConn(conn)
+	}
+}
 
 func handleConn(conn net.Conn) {
 	defer conn.Close()
-
 	for {
 		go parseMessage(conn)
 	}
@@ -24,25 +42,16 @@ func parseMessage(conn net.Conn) {
 		conn.Close()
 		return
 	}
-
 	msg := buf[:n]
-	fmt.Println(string(msg))
+	fmt.Println("msg received: ", string(msg))
+	handleMsg(string(msg))
 }
 
-func main() {
-	ln, err := net.Listen("tcp", ":54321")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+var node_id string = os.Getenv("NODE_ID")
+var node_sk []byte
+var node_pk []byte
 
-	for {
-		conn, err := ln.Accept()
-		if err != nil {
-			continue
-		}
+func handleMsg(cipher string) {
+	// 事实上收到的是加密后的密文，需要用node_sk解密
 
-		// 每接收到一个连接就启动一个goroutine处理
-		go handleConn(conn)
-	}
 }

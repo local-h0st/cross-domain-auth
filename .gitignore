@@ -1,0 +1,16 @@
+.bash_history
+.bash_logout
+.bashrc
+.cache/
+.docker/
+.lesshst
+.pip/
+.profile
+.pydistutils.cfg
+.ssh/
+.sudo_as_admin_successful
+.wget-hsts
+HyperledgerFabric/fabric-samples/
+HyperledgerFabric/fabric/
+HyperledgerFabric/mycodes/atcc/vendor/
+go/

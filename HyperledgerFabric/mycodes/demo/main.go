@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
@@ -13,9 +12,6 @@ import (
 type SmartContract struct {
 	contractapi.Contract
 }
-
-var node_id string = os.Getenv("NODE_ID")
-var node_pk string // 不知道公钥是不是这个类型，记得初始化
 
 // 不要ID了，直接拿PID当成索引
 type PseudoRecord struct {

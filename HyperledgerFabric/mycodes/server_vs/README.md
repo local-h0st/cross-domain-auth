@@ -12,3 +12,8 @@
 有个问题，fabric-sdk-go支持到2.2版的fabric，我用的是2.5版本的，不知道会不会有兼容性问题
 
 发现在code-server里面一键运行的话tcp监听不了，如果go build之后ssh连上去运行可以监听，不知道是因为在code-server内的原因还是单纯需要build
+
+
+让Claude来写这个RSA真是写不清楚啊，无语，不如我上网copy
+
+md，mv指令直接把原来的README给覆盖了，还好GitHub上有备份
