@@ -1,5 +1,11 @@
 # records
-这里主要是记录一些开发时的中间过程
+这里主要是记录一些开发时的中间过程（倒着更新）
+
+------------------------------
+
+让Claude来写这个RSA真是写不清楚啊，无语，不如我上网copy
+
+md，mv指令直接把原来的README给覆盖了，还好GitHub上有备份
 
 ------------------------------
 根据这个文档[devMod](https://hyperledger-fabric.readthedocs.io/en/release-2.5/peer-chaincode-devmode.html)，按照步骤写了4个shell，放在devModOn目录下，并且把示例代码替换成了自己的chaincode，能开起来，但是init失败，可能是语法问题

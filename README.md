@@ -1,17 +1,18 @@
 # Project cross-domain-auth "AlternateWorld"
 
 ## TODO & done
-* [ ] 启动test_network也写成脚本，完善readme的test_network部分
-* [ ] 细看一下test_network的tutorial细节
-* [ ] 去command reference看看peer chaincode invoke和peer chaincode query
-* [ ] chaincode，Fabric App for verification server都写了一半
-* [ ] Client App还没开始
-* [ ] 有必要看一看Key Concepts
+* [ ] 继续写chaincode，Fabric App for verification server。Client App还没开始写
+* [ ] 有必要看一看Key Concepts，以及test_network的tutorial细节
 
+[没什么用的碎碎念](https://github.com/local-h0st/cross-domain-auth/blob/master/records.md)
+
+* [x] 去command reference看看peer chaincode invoke和peer chaincode query
+* [x] 启动test_network也写成脚本，完善readme的test_network部分
 * [x] 先拿atcc的chaincode部署在测试网络上
 * [x] 自己写chaincode(atcc)测试，数据用my favorite songs
 * [x] 重装fabric-samples
 * [x] 重装服务器并恢复开发环境
+
 
 ## OverView of the Proj
 
@@ -35,21 +36,22 @@
 
 *建议别看任何的中文文档，会变得不幸...直接看英文文档会更加新，也会少很多坑*
 
-#### 项目结构
-整个项目应该是需要编写链码、VS上的服务端程序、PAS上的服务端程序，device上的用户程序。
+## 项目结构
+* [chaincode](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/mycodes/demo)
+* [Fabric app for verification server](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/mycodes/server_vs)
+
+整个项目需要编写chaincode、VS上的服务端程序、PAS上的服务端程序，device上的用户程序。
 由于服务端程序涉及到调用智能合约，因此也属于DApp的范畴，这部分需要用到相关的go sdk开发
 链码直接采用`contractapi`，而不是`shim`包，因为据官方文档说shim更加初级，有可能会有奇奇怪怪的问题。
 在`~/HyperledgerFabric/mycodes/demo`目录下存放的是链码的源代码，目前只是写了一个大致的框架。其他的服务端程序尚未开始开发。demo目录以后想起来了再改个名，比如改成demo_chaincode之类的
 
-
 ## test_network
-编写Fabric App for verification server时，sdk需要和chaincode交互。我的demo chaincode之前是在devMod上跑的，没有任何的peer，sdk交互起来好像有点问题，sdk和chaincode交互的需要一个真实的网络而不是devMod。因此我尝试将atcc部署在test_network上，先看看能不能正常交互，反正tutorial说可以拿来部署其他的chaincode。之前部署直接导致服务器卡死，重装才解决，心有余悸，这次也是做好了比较充分的备份才敢第二次尝试。
-```
-peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.example.com --tls --cafile "${PWD}/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem" -C mychannel -n basic --peerAddresses localhost:7051 --tlsRootCertFiles "${PWD}/organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt" --peerAddresses localhost:9051 --tlsRootCertFiles "${PWD}/organizations/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt" -c '{"function":"InitLedger","Args":[]}'   // 2023-05-23 23:02:00.521 CST 0001 INFO [chaincodeCmd] chaincodeInvokeOrQuery -> Chaincode invoke successful. result: status:200
+[deploy your chaincode on test_network](https://github.com/local-h0st/cross-domain-auth/blob/master/HyperledgerFabric/myshells/testNetworkStart)
 
-peer chaincode query -C mychannel -n basic -c '{"Args":["QueryAllRecords"]}'    // [{"ID":"#1","Name":"Leaving California","Author":"Maroon 5","Rating":2},{"ID":"#2","Name":"In Your Eyes","Author":"The Weeknd","Rating":3},{"ID":"#3","Name":"La Isla Bonita","Author":"Madonna","Rating":1}]
-```
-这次成功！
+编写Fabric App for verification server时，sdk需要和chaincode交互。我的demo chaincode之前是在devMod上跑的，没有任何的peer，sdk交互起来好像有点问题，sdk和chaincode交互的需要一个真实的网络而不是devMod。因此我尝试将atcc部署在test_network上，先看看能不能正常交互，反正tutorial说可以拿来部署其他的chaincode。之前部署直接导致服务器卡死，重装才解决，心有余悸，这次也是做好了比较充分的备份才敢第二次尝试。好在这次成功了！
+
+### 关于peer chaincode
+之前一直奇怪`peer chaincode invoke`和`peer chaincode query`有什么区别，直到我查阅了Cmd Ref的[这里](https://hyperledger-fabric.readthedocs.io/en/release-2.5/commands/peerchaincode.html)，里面提到`invoke`会try to commit the endorsed transaction to the network，但是`query`不会generate transaction.
 
 ## devMod
 为了方便测试链码，Hyperledger官方给出了[devMod](https://hyperledger-fabric.readthedocs.io/en/release-2.5/peer-chaincode-devmode.html)。根据教程一条条在CLI里面敲命令太麻烦了，因此我写了4个自动化脚本，放在~/HyperledgerFabric/myshells/devModOn目录下。同时在～下写了dev.sh，能够方便地调用那四个shell，要开启devMod，请按照以下步骤：
