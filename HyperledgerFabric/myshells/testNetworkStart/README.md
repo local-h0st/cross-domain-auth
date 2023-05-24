@@ -1,6 +1,6 @@
 # How to deploy your chaincode on test_network
 
-## prepare: include start the test network, install the chaincode and set env vars
+### prepare: include start the test network, install the chaincode and set env vars
 ```
 cd ~/HyperledgerFabric/myshells/testNetworkStart
 ./start_test_network.sh your_chaincode_path
@@ -10,6 +10,7 @@ export PATH=${PWD}/../bin:$PATH
 export FABRIC_CFG_PATH=$PWD/../config/
 ```
 __set the environment variables to operate the peer CLI as Org1 or Org2:__
+
 _as Org1:_
 ```
 export CORE_PEER_TLS_ENABLED=true
@@ -27,9 +28,9 @@ export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/org2.examp
 export CORE_PEER_ADDRESS=localhost:9051
 ```
 
-## interact: mainly using peer chaincode invoke and peer chaincode query
+### interact: mainly using peer chaincode invoke and peer chaincode query
+__interact commands tested for atcc:__
 
-#### interact commands tested for atcc:
 These are commands tested by myself for atcc, I executed them in sequence.
 
 _when env set as Org2:_
@@ -48,7 +49,10 @@ peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.exa
 peer chaincode query -C mychannel -n basic -c '{"Args":["QueryAllRecords"]}'
 ```
 
-#### commands tested for asset-transfer-basic
+---
+
+__interact commands tested for asset-transfer-basic__
+
 These are commands tested by myself for asset-transfer-basic/chaincode-go, not 100% suitable for your chaincode.
 
 _when env set as Org1:_
