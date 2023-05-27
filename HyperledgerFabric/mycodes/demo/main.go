@@ -3,10 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"github.com/syndtr/goleveldb/leveldb"
 )
 
 type SmartContract struct {
@@ -23,7 +23,7 @@ type PseudoRecord struct {
 func (s *SmartContract) CheckExistance(ctx contractapi.TransactionContextInterface, pid string) (bool, error) {
 	assetJSON, err := ctx.GetStub().GetState(pid)
 	if err != nil {
-		return false, fmt.Errorf("In CheckExistance(): get state failed.")
+		return false, fmt.Errorf("[chaincode err in CheckExistance()] get state failed.")
 	} else if assetJSON != nil {
 		return true, nil
 	} else {
@@ -32,8 +32,6 @@ func (s *SmartContract) CheckExistance(ctx contractapi.TransactionContextInterfa
 	}
 }
 
-///////////////////////////////////////////////////////////////////////////////////
-
 func (s *SmartContract) InitLedger(ctx contractapi.TransactionContextInterface) error {
 	recordJSON, _ := json.Marshal(PseudoRecord{
 		false,
@@ -41,16 +39,10 @@ func (s *SmartContract) InitLedger(ctx contractapi.TransactionContextInterface) 
 		time.Now().Format("2006-01-02 15:04:05"),
 	}) // 懒得写err了，这里总不可能出错吧
 	ctx.GetStub().PutState("redh3tALWAYS", recordJSON)
-
-	// 初始化leveldb
-	_, err := leveldb.OpenFile("./db", nil)
-	if err != nil {
-		return fmt.Errorf("In func InitLedger(): init level db failed.")
-	}
-	ctx.GetStub().PutState("db", []byte("./db"))
-
 	return nil
 }
+
+/*
 
 func (s *SmartContract) HandleMsgForPseudo(ctx contractapi.TransactionContextInterface, cipher_text string) error {
 	// msg 先rsa解密，这里暂时没写，因此测试的时候不应该加密
@@ -105,41 +97,15 @@ func (s *SmartContract) RequestTrackPID(ctx contractapi.TransactionContextInterf
 	}
 
 }
+*/
 
-func (s *SmartContract) storeMsg(ctx contractapi.TransactionContextInterface, pid string, msg_json string) error {
-	// 用于存储pid和点p，以json的格式
-	// 这里我选择LevelDB - Fabric自带的内嵌键值存储数据库,可以直接在chaincode中使用。但是数据只保存在一个peer节点上,不可持久化。
-	dbpath, err := ctx.GetStub().GetState("db")
+func main() {
+	chaincode, err := contractapi.NewChaincode(&SmartContract{})
 	if err != nil {
-		return fmt.Errorf("In func storeMsg(): get state 'db' failed.")
+		log.Panicf("[main] create chaincode failed.")
 	}
-	db, err := leveldb.OpenFile(string(dbpath), nil)
+	err = chaincode.Start()
 	if err != nil {
-		return fmt.Errorf("In func storeMsg(): level db open file failed.")
+		log.Panicf("[main] start chaincode failed.")
 	}
-	defer db.Close()
-	db.Put([]byte(pid), []byte(msg_json), nil)
-	return nil
-} // done but not tested.
-
-func (s *SmartContract) getMsg(ctx contractapi.TransactionContextInterface, pid string) (string, error) {
-	dbpath, err := ctx.GetStub().GetState("db")
-	if err != nil {
-		return "", fmt.Errorf("In func getMsg(): get state 'db' failed.")
-	}
-	db, err := leveldb.OpenFile(string(dbpath), nil)
-	if err != nil {
-		return "", fmt.Errorf("In func getMsg(): level db open file failed.")
-	}
-	defer db.Close()
-
-	val, err := db.Get([]byte(pid), nil)
-	return string(val), err
-
-}
-
-func verifyIDinSGX(cipher string) bool {
-	// 在enclave内部解密核验是否在黑名单上，true表示合法
-	// 出错了一律直接false
-	return true
 }

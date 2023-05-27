@@ -12,6 +12,8 @@ https://youtube.com/shorts/y0cxkflRHto?feature=share
 
 貌似必须要保证每一个peer上运行一遍chaincode后的结果必须完全一致，否则不能达成共识
 
+# 这个markdown需要重写
+
 #### func (s *SmartContract) HandleMsgForPseudo(ctx contractapi.TransactionContextInterface, cipher_text string) error
 该函数传参的cihper_text原文为message的JSON字符串，采用RSA方案，用node_id为tag的背书节点的公钥加密得到cipher_text
 
@@ -37,6 +39,4 @@ InitLedger时在公开的账本上指明了database的地址是./db，但是同�
 测试用json字符串的生成可以用../generate_json_tool/目录下的工具
 ```
 {"PID":"this is pid.","P":"this is p","Tag":"3","ID_cipher":"this is cipher.","PK_device2domain":"this is pk."}
-
-
 ```

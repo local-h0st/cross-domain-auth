@@ -12,5 +12,5 @@
 .wget-hsts
 HyperledgerFabric/fabric-samples/
 HyperledgerFabric/fabric/
-HyperledgerFabric/mycodes/atcc/vendor/
 go/
+ctf_test/

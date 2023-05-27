@@ -4,6 +4,9 @@
 ```
 cd ~/HyperledgerFabric/myshells/testNetworkStart
 ./start_test_network.sh your_chaincode_path
+```
+Now if you want to interact with chaincode through fabric sdk or gateway, then the following steps are not required. Else if you want to use command `peer chaincode`, just continue.
+```
 cd ~/HyperledgerFabric/fabric-samples/test-network
 export PATH=/usr/local/go/bin/:$PATH
 export PATH=${PWD}/../bin:$PATH
