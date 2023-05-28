@@ -48,9 +48,9 @@ __References:__
 产生指定格式的json字符串用于测试，通过sendMsg发给FabApp4VS
 
 
-#### [TestChaincode](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/atcc)
+#### [atcc](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/atcc)
 照着教程魔改的100%能正常工作的链码，用于测试某些脚本能否正常部署这些自己开发的链码
 
-## for test: devMod & test_network
+## For test: devMod & startTestNetwork
 * [How to start devMod](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/shells/devModOn)
 * [How to deploy your on test network](https://github.com/local-h0st/cross-domain-auth/blob/master/HyperledgerFabric/shells/testNetworkStart)
