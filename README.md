@@ -17,37 +17,42 @@
 
 这个项目是做跨域认证的，基于Hyperledger Fabric 2.5，采用Intel SGX作为Truetsed Execution Environment的硬件支持。
 
-🎉首先庆祝第一阶段顺利结束！接下来就是搭环境写代码的实现阶段了。
+🎉首先庆祝第一阶段顺利结束！接下来就是搭环境写代码的实现阶段了。整个项目需要编写chaincode、VS上的服务端程序、PAS上的服务端程序，device上的用户程序。由于服务端程序涉及到调用智能合约，因此也属于DApp的范畴，这部分需要用到相关的go sdk开发（现采用fabric-gateway）
 
-🔰Hyperledger Fabric👉[官方文档](https://hyperledger-fabric.readthedocs.io/en/release-2.5/)  （一定要看release-2.5版的，版本不一样冲突的太多了）
+🔰Hyperledger Fabric👉[官方文档](https://hyperledger-fabric.readthedocs.io/en/release-2.5/)。一定要看release-2.5版的
+* [fabric-samples仓库](https://github.com/hyperledger/fabric-samples)，含多项可供参考的示例代码包括chaincode和Fabric App，记得切换branch
+* [Key Concepts](https://hyperledger-fabric.readthedocs.io/en/release-2.5/key_concepts.html)
+* [Commands Reference](https://hyperledger-fabric.readthedocs.io/en/release-2.5/command_ref.html)
+* [contract-api-go repo](https://github.com/hyperledger/fabric-contract-api-go)，内含使用`contract-api-go`编写chaincode的教程
+* [fabric-gateway Guidance](https://hyperledger.github.io/fabric-gateway/)，通过gateway提供的API和chaincode交互
 
-[Key Concepts](https://hyperledger-fabric.readthedocs.io/en/release-2.5/key_concepts.html)
+*建议别看任何的中文文档，会变得不幸...英文文档会更加up-to-date，直接看也会少很多坑！*
 
-[Commands Reference](https://hyperledger-fabric.readthedocs.io/en/release-2.5/command_ref.html)
+```
+// 以下目录经过重命名，很多脚本跑起来可能会出问题，不过易于发现
+~/HyperledgerFabric/mycodes/ ==> ~/HyperledgerFabric/codes/
+~/HyperledgerFabric/myshells/ ==> ~/HyperledgerFabric/shells/
+~/HyperledgerFabric/codes/send_msg_tool/ ==> ~/HyperledgerFabric/codes/sendMsg/
+~/HyperledgerFabric/codes/gengerate_json_tool/ ==> ~/HyperledgerFabric/codes/genJSON/
 
-[contract-api-go仓库](https://github.com/hyperledger/fabric-contract-api-go)，内含使用`contract-api-go`编写chaincode的教程
-
-[fabric-sdk-go仓库](https://github.com/hyperledger/fabric-sdk-go)，开发Fabric App必看
-
-[fabric-samples仓库](https://github.com/hyperledger/fabric-samples)，含多项可供参考的示例代码包括chaincode和Fabric App，记得切换branch
-
-还有一个github.io的Fabric[中文文档](https://hyperledger.github.io/)（欸好像不是这个网址），不过看着好像没什么用
-
-*建议别看任何的中文文档，会变得不幸...直接看英文文档会更加新，也会少很多坑*
+// 以下目录经过合并
+~/HyperledgerFabric/codes/genJSON
+~/HyperledgerFabric/codes/sendMsg
+合并入
+~/HyperledgerFabric/codes/tools/
+```
 
 ## 项目结构
 每个README同目录下都有一个用于记录中间过程的nonsense.md
-### [chaincode](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/mycodes/demo)
+#### [MainChaincode](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/demo)
 链码部分，主要提供了和账本交互的接口
-### [Fabric app for verification server](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/mycodes/server_vs)
-每一台运行chaincode的peer都需要安装此服务程序，用于和链码配套完成有关匿名身份的部分
-
-整个项目需要编写chaincode、VS上的服务端程序、PAS上的服务端程序，device上的用户程序。
-由于服务端程序涉及到调用智能合约，因此也属于DApp的范畴，这部分需要用到相关的go sdk开发
-链码直接采用`contractapi`，而不是`shim`包，因为据官方文档说shim更加初级，有可能会有奇奇怪怪的问题。
-在`~/HyperledgerFabric/mycodes/demo`目录下存放的是链码的源代码，目前只是写了一个大致的框架。其他的服务端程序尚未开始开发。demo目录以后想起来了再改个名，比如改成demo_chaincode之类的
+#### [FabApp4VS](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/serverVS)
+每一台运行chaincode的peer都需要安装此服务程序，用于和链码配套完成有关匿名身份的部分，通过fabric-gateway和链码demo交互
+#### [sendMsg](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/sendMsg)
+用于向指定端口发送指定消息，通常用来向FabApp4VS发送包含pid等内容的信息，以测试FabApp4VS功能是否正常
+#### [TestChaincode](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/atcc)
+照着教程魔改的100%能正常工作的链码，用于测试某些脚本能否正常部署这些自己开发的链码
 
 ### devMod & test_network
-* [How to start devMod](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/myshells/devModOn)
-
-* [How to deploy your on test network](https://github.com/local-h0st/cross-domain-auth/blob/master/HyperledgerFabric/myshells/testNetworkStart)
+* [How to start devMod](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/shells/devModOn)
+* [How to deploy your on test network](https://github.com/local-h0st/cross-domain-auth/blob/master/HyperledgerFabric/shells/testNetworkStart)
