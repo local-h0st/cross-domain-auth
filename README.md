@@ -9,7 +9,7 @@ __TODO:__
 * [ ] 有必要看一看Key Concepts，以及test_network的tutorial细节，另外目录重命名了，遇到问题了再慢慢改
 
 __References:__
-🔰Hyperledger Fabric👉[官方文档](https://hyperledger-fabric.readthedocs.io/en/release-2.5/)。一定要看release-2.5版的
+* 🔰Hyperledger Fabric👉[官方文档](https://hyperledger-fabric.readthedocs.io/en/release-2.5/)。一定要看release-2.5版的！
 * [fabric-samples仓库](https://github.com/hyperledger/fabric-samples)，含多项可供参考的示例代码包括chaincode和Fabric App，记得切换branch
 * [Key Concepts](https://hyperledger-fabric.readthedocs.io/en/release-2.5/key_concepts.html)
 * [Commands Reference](https://hyperledger-fabric.readthedocs.io/en/release-2.5/command_ref.html)
@@ -41,12 +41,16 @@ __References:__
 #### [FabApp4VS](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/serverVS)
 每一台运行chaincode的peer都需要安装此服务程序，用于和链码配套完成有关匿名身份的部分，通过fabric-gateway和链码demo交互
 
-#### [sendMsg](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/sendMsg)
-用于向指定端口发送指定消息，通常用来向FabApp4VS发送包含pid等内容的信息，以测试FabApp4VS功能是否正常
+#### [sendMsg](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/tools/sendMsg)
+用于向指定端口发送指定消息，通常用来向FabApp4VS发送消息，测试FabApp4VS功能是否正常
+
+#### [genJSON](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/tools/genJSON)
+产生指定格式的json字符串用于测试，通过sendMsg发给FabApp4VS
+
 
 #### [TestChaincode](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/atcc)
 照着教程魔改的100%能正常工作的链码，用于测试某些脚本能否正常部署这些自己开发的链码
 
-#### devMod & test_network
+## for test: devMod & test_network
 * [How to start devMod](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/shells/devModOn)
 * [How to deploy your on test network](https://github.com/local-h0st/cross-domain-auth/blob/master/HyperledgerFabric/shells/testNetworkStart)
