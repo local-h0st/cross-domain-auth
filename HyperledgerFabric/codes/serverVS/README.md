@@ -5,7 +5,7 @@
 在code-server内一键运行会导致tcp无法监听，因此在code-server内go build，通过ssh进入CLI运行
 
 ### 与demo交互
-先在test network上部署demo，成功后下一步先测试一下isExist函数能否工作，以及观察运行返回的结果。这次先直接在服务器跑，下回再放容器里跑（失败教训参考nonsense.md）
+先在test network上部署demo，成功后下一步先测试一下isExist函数能否工作，以及观察运行返回的结果。这次先直接在服务器跑，下回再放容器里跑（失败教训参考nonsense.md）开容器测试也是可以的，直接挂载目录就完了呗，不自己复制，唯一要解决的就是容器端口占用的问题、两个容器如何通信的问题。
 
 asset-transfer-basic gateway版代码中const部分有误，将`certPath = cryptoPath + "/users/User1@org1.example.com/msp/signcerts/cert.pem"`改为`certPath = cryptoPath + "/users/User1@org1.example.com/msp/signcerts/User1@org1.example.com-cert.pem"`，这样才能顺利跑起来。
 

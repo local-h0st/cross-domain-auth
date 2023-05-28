@@ -1,12 +1,12 @@
 # Project cross-domain-auth - AlternateWorld
 🎉首先庆祝第一阶段校赛顺利结束！
 ## OverView of the Proj
-这个项目是做跨域认证的，基于Hyperledger Fabric 2.5，采用Intel SGX作为Truetsed Execution Environment的硬件支持。整个项目需要编写chaincode、VS上的服务端程序、PAS上的服务端程序，device上的用户程序。由于服务端程序涉及到调用智能合约，因此也属于DApp的范畴，这部分需要用到相关的go sdk开发（现采用fabric-gateway）
+这个项目是做跨域认证的，基于Hyperledger Fabric 2.5，采用Intel SGX作为Truetsed Execution Environment的硬件支持。整个项目需要编写chaincode、VS上的服务端程序、PAS上的服务端程序，device上的用户程序Client App。由于服务端程序涉及到调用智能合约，因此也属于DApp的范畴，这部分需要用到相关的go sdk开发（现采用fabric-gateway）
 
 __TODO:__
 * [ ] 设计报告提上日程！
-* [ ] 继续写chaincode，Fabric App for verification server。Client App还没开始写
-* [ ] 有必要看一看Key Concepts，以及test_network的tutorial细节
+* [ ] 继续开发chaincode，FabApp4VS，命名规则最好统一
+* [ ] 有必要看一看Key Concepts，以及test_network的tutorial细节，另外目录重命名了，遇到问题了再慢慢改
 
 __References:__
 🔰Hyperledger Fabric👉[官方文档](https://hyperledger-fabric.readthedocs.io/en/release-2.5/)。一定要看release-2.5版的
@@ -37,13 +37,16 @@ __References:__
 每个README同目录下都有一个用于记录中间过程的nonsense.md
 #### [MainChaincode](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/demo)
 链码部分，主要提供了和账本交互的接口
+
 #### [FabApp4VS](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/serverVS)
 每一台运行chaincode的peer都需要安装此服务程序，用于和链码配套完成有关匿名身份的部分，通过fabric-gateway和链码demo交互
+
 #### [sendMsg](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/sendMsg)
 用于向指定端口发送指定消息，通常用来向FabApp4VS发送包含pid等内容的信息，以测试FabApp4VS功能是否正常
+
 #### [TestChaincode](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/atcc)
 照着教程魔改的100%能正常工作的链码，用于测试某些脚本能否正常部署这些自己开发的链码
 
-### devMod & test_network
+#### devMod & test_network
 * [How to start devMod](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/shells/devModOn)
 * [How to deploy your on test network](https://github.com/local-h0st/cross-domain-auth/blob/master/HyperledgerFabric/shells/testNetworkStart)
