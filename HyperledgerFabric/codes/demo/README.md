@@ -1,4 +1,6 @@
 # 开发记录
+写完新的chaincode部署之前一定要`go mod tidy && go mod vendor`否则会部署失败!参考[这里](https://hyperledger-fabric.readthedocs.io/en/release-2.5/chaincode4ade.html)
+# 这个markdown需要重写
 
 其实匿名生成阶段本质上就是调用智能合约，所以可以直接写成接口
 按照原先方案，不同VS收到的message不同，这个在智能合约的实现上会出现需要为不同背书节点传入不同参数的情况
@@ -12,7 +14,7 @@ https://youtube.com/shorts/y0cxkflRHto?feature=share
 
 貌似必须要保证每一个peer上运行一遍chaincode后的结果必须完全一致，否则不能达成共识
 
-# 这个markdown需要重写
+
 
 #### func (s *SmartContract) HandleMsgForPseudo(ctx contractapi.TransactionContextInterface, cipher_text string) error
 该函数传参的cihper_text原文为message的JSON字符串，采用RSA方案，用node_id为tag的背书节点的公钥加密得到cipher_text

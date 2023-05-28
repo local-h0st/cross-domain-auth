@@ -1,30 +1,21 @@
-# Project cross-domain-auth "AlternateWorld"
+# Project cross-domain-auth - AlternateWorld
+🎉首先庆祝第一阶段校赛顺利结束！
+## OverView of the Proj
+这个项目是做跨域认证的，基于Hyperledger Fabric 2.5，采用Intel SGX作为Truetsed Execution Environment的硬件支持。整个项目需要编写chaincode、VS上的服务端程序、PAS上的服务端程序，device上的用户程序。由于服务端程序涉及到调用智能合约，因此也属于DApp的范畴，这部分需要用到相关的go sdk开发（现采用fabric-gateway）
 
-## TODO & done
+__TODO:__
+* [ ] 设计报告提上日程！
 * [ ] 继续写chaincode，Fabric App for verification server。Client App还没开始写
 * [ ] 有必要看一看Key Concepts，以及test_network的tutorial细节
 
-* [x] 整理项目的markdown
-* [x] 去command reference看看peer chaincode invoke和peer chaincode query
-* [x] 启动test_network也写成脚本，完善readme的test_network部分
-* [x] 先拿atcc的chaincode部署在测试网络上
-* [x] 自己写chaincode(atcc)测试，数据用my favorite songs
-* [x] 重装fabric-samples
-* [x] 重装服务器并恢复开发环境
-
-
-## OverView of the Proj
-
-这个项目是做跨域认证的，基于Hyperledger Fabric 2.5，采用Intel SGX作为Truetsed Execution Environment的硬件支持。
-
-🎉首先庆祝第一阶段顺利结束！接下来就是搭环境写代码的实现阶段了。整个项目需要编写chaincode、VS上的服务端程序、PAS上的服务端程序，device上的用户程序。由于服务端程序涉及到调用智能合约，因此也属于DApp的范畴，这部分需要用到相关的go sdk开发（现采用fabric-gateway）
-
+__References:__
 🔰Hyperledger Fabric👉[官方文档](https://hyperledger-fabric.readthedocs.io/en/release-2.5/)。一定要看release-2.5版的
 * [fabric-samples仓库](https://github.com/hyperledger/fabric-samples)，含多项可供参考的示例代码包括chaincode和Fabric App，记得切换branch
 * [Key Concepts](https://hyperledger-fabric.readthedocs.io/en/release-2.5/key_concepts.html)
 * [Commands Reference](https://hyperledger-fabric.readthedocs.io/en/release-2.5/command_ref.html)
 * [contract-api-go repo](https://github.com/hyperledger/fabric-contract-api-go)，内含使用`contract-api-go`编写chaincode的教程
-* [fabric-gateway Guidance](https://hyperledger.github.io/fabric-gateway/)，通过gateway提供的API和chaincode交互
+* [fabric-gateway Guidance](https://hyperledger.github.io/fabric-gateway/)或[gateway repo](https://github.com/hyperledger/fabric-gateway/blob/main/pkg/client/)，通过gateway提供的API和chaincode交互
+* [gateway readthedoc](https://hyperledger-fabric.readthedocs.io/en/release-2.5/gateway.html#writing-client-applications)
 
 *建议别看任何的中文文档，会变得不幸...英文文档会更加up-to-date，直接看也会少很多坑！*
 

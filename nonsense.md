@@ -4,6 +4,14 @@
 ## useless repos & links
 * [fabric-sdk-go仓库](https://github.com/hyperledger/fabric-sdk-go)是用的传统sdk，对gateway方式来说参考意义不大。
 * Fabric[中文文档](https://hyperledger.github.io/)（欸好像不是这个网址），github.io的，不过看着好像没什么用
+__done__
+* [x] 整理项目的markdown
+* [x] 去command reference看看peer chaincode invoke和peer chaincode query
+* [x] 启动test_network也写成脚本，完善readme的test_network部分
+* [x] 先拿atcc的chaincode部署在测试网络上
+* [x] 自己写chaincode(atcc)测试，数据用my favorite songs
+* [x] 重装fabric-samples
+* [x] 重装服务器并恢复开发环境
 
 ## misc
 让Claude来写这个RSA真是写不清楚啊，无语，不如我上网copy。md，mv指令直接把原来的README给覆盖了，还好GitHub上有备份
