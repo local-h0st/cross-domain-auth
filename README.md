@@ -49,7 +49,7 @@ __References:__
 
 
 #### [atcc](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/atcc)
-照着教程魔改的100%能正常工作的链码，用于测试某些脚本能否正常部署这些自己开发的链码
+照着教程魔改的100%能正常工作的链码，用于测试某些脚本能否正确部署这些自己开发的链码
 
 ## For test: devMod & startTestNetwork
 * [How to start devMod](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/shells/devModOn)
