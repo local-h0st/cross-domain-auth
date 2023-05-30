@@ -4,7 +4,8 @@
 这个项目是做跨域认证的，基于Hyperledger Fabric 2.5，采用Intel SGX作为Truetsed Execution Environment的硬件支持。整个项目需要编写chaincode、VS上的服务端程序、PAS上的服务端程序，device上的用户程序Client App。由于服务端程序涉及到调用智能合约，因此也属于DApp的范畴，这部分需要用到相关的go sdk开发（现采用fabric-gateway）
 
 __TODO:__
-* [ ] 设计报告提上日程！
+* [ ] 设计报告！
+* [ ] sgx交互！
 * [ ] 继续开发chaincode，FabApp4VS，命名规则最好统一
 * [ ] 有必要看一看Key Concepts，以及test_network的tutorial细节，另外目录重命名了，遇到问题了再慢慢改
 

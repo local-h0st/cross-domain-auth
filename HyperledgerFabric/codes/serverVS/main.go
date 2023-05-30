@@ -34,13 +34,15 @@ var node_id string = os.Getenv("NODE_ID")
 var node_sk []byte
 var node_pk []byte
 var serving_port string = ":54321"
+var db_path string = "./db"
 
 func main() {
 	// 初始化leveldb
-	_, err := leveldb.OpenFile("./db", nil)
+	db, err := leveldb.OpenFile(db_path, nil)
 	if err != nil {
 		panic(err)
 	}
+	defer db.Close()
 	// 连接gateway，照抄application-gateway-go
 	fmt.Println("[main] connecting to gateway...")
 	clientConnection := newGrpcConnection()
@@ -88,11 +90,11 @@ func main() {
 		if err != nil {
 			continue
 		}
-		go handleConn(conn, contract)
+		go handleConn(conn, contract, db)
 	}
 }
 
-func HandleMsgForPseudo(cipher string, contract *client.Contract) error {
+func HandleMsgForPseudo(cipher string, contract *client.Contract, db *leveldb.DB) error {
 	// 事实上收到的是加密后的密文，需要用node_sk解密
 	// decryptMsg暂时没写
 	msg_text := decryptMsg(cipher)
@@ -112,65 +114,46 @@ func HandleMsgForPseudo(cipher string, contract *client.Contract) error {
 	}
 	// 查询pid是否存在
 	if isExist(contract, msg.PID) {
+		fmt.Println("[handleMsgForPseudo] pid exists, en error was returned.")
 		return fmt.Errorf("[err from HandleMsgForPseudo] pid exists.")
 	}
-
+	// 用于存储pid和点p，以json的格式
+	// 这里我选择LevelDB - Fabric自带的内嵌键值存储数据库,可以直接在chaincode中使用。
+	// 数据只保存在一个peer节点上,不可持久化。
+	// https://www.tizi365.com/archives/411.html
+	err = db.Put([]byte(msg.PID), []byte(msg_text), nil)
+	if err != nil {
+		return fmt.Errorf("[err from HandleMsgForPseudo] put record to db failed.")
+	}
+	/*
+		val, err := db.Get([]byte(msg.PID), nil)
+		if err != nil {
+			return fmt.Errorf("[err from HandleMsgForPseudo] read record from db failed.")
+		} else {
+			fmt.Println("get from db: ", string(val))
+		}*/
+	sgxVerifyID(msg.ID_cipher)
 	return nil
+}
+
+func sgxVerifyID(cipher_id string) bool {
+	// 在enclave内部解密核验是否在黑名单上，true表示合法
+	// 出错了一律直接false，这里不再返回err
+	return true
 }
 
 func isExist(contract *client.Contract, pid string) bool {
-	fmt.Printf("[isExist] func called.\n")
-
 	evaluateResult, err := contract.EvaluateTransaction("CheckExistance", pid)
 	if err != nil {
-		panic(fmt.Errorf("failed to evaluate transaction: %w", err))
+		panic(fmt.Errorf("[isExist] failed to evaluate transaction: %w", err))
 	}
-
-	fmt.Printf("[isExist] func finished.\n")
 	result := formatJSON(evaluateResult)
-	fmt.Println("[isExist] result ==> ", result)
-	return true
+	if result == "true" {
+		return true
+	} else {
+		return false
+	}
 }
-
-/*
-func (s *SmartContract) storeMsg(ctx contractapi.TransactionContextInterface, pid string, msg_json string) error {
-	// 用于存储pid和点p，以json的格式
-	// 这里我选择LevelDB - Fabric自带的内嵌键值存储数据库,可以直接在chaincode中使用。但是数据只保存在一个peer节点上,不可持久化。
-	dbpath, err := ctx.GetStub().GetState("db")
-	if err != nil {
-		return fmt.Errorf("In func storeMsg(): get state 'db' failed.")
-	}
-	db, err := leveldb.OpenFile(string(dbpath), nil)
-	if err != nil {
-		return fmt.Errorf("In func storeMsg(): level db open file failed.")
-	}
-	defer db.Close()
-	db.Put([]byte(pid), []byte(msg_json), nil)
-	return nil
-} // done but not tested.
-
-func (s *SmartContract) getMsg(ctx contractapi.TransactionContextInterface, pid string) (string, error) {
-	dbpath, err := ctx.GetStub().GetState("db")
-	if err != nil {
-		return "", fmt.Errorf("In func getMsg(): get state 'db' failed.")
-	}
-	db, err := leveldb.OpenFile(string(dbpath), nil)
-	if err != nil {
-		return "", fmt.Errorf("In func getMsg(): level db open file failed.")
-	}
-	defer db.Close()
-
-	val, err := db.Get([]byte(pid), nil)
-	return string(val), err
-
-}
-
-func verifyIDinSGX(cipher string) bool {
-	// 在enclave内部解密核验是否在黑名单上，true表示合法
-	// 出错了一律直接false
-	return true
-}
-*/
 
 /*----------- 直接抄application-gateway-go -----------*/
 func initLedger(contract *client.Contract) {
@@ -262,14 +245,14 @@ func formatJSON(data []byte) string {
 
 /*----------- not key funcs -----------*/
 
-func handleConn(conn net.Conn, contract *client.Contract) {
+func handleConn(conn net.Conn, contract *client.Contract, db *leveldb.DB) {
 	defer conn.Close()
 	for {
-		go parseMessage(conn, contract)
+		go parseMessage(conn, contract, db)
 	}
 }
 
-func parseMessage(conn net.Conn, contract *client.Contract) {
+func parseMessage(conn net.Conn, contract *client.Contract, db *leveldb.DB) {
 	buf := make([]byte, 1024)
 	n, err := conn.Read(buf)
 	if err == io.EOF {
@@ -281,7 +264,7 @@ func parseMessage(conn net.Conn, contract *client.Contract) {
 	}
 	msg := buf[:n]
 	fmt.Println("[parseMessage] msg received: ", string(msg))
-	HandleMsgForPseudo(string(msg), contract)
+	HandleMsgForPseudo(string(msg), contract, db)
 }
 
 func decryptMsg(cipher string) string {
