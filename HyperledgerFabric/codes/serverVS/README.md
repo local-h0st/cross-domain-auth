@@ -17,3 +17,6 @@ asset-transfer-basic gateway版代码中const部分有误，将`certPath = crypt
 
 ## 一些问题
 这是跑在VS上的，不过反正都是跑在一个容器内，用Fabric SDK去调用chaincode，因此貌似跑在哪里都行。如果要限定必须在VS上跑，可以在这个程序里写检测，因为在chaincode里面检测比较麻烦。感觉限定在peer上跑更安全，虽然说不出哪里更安全。请求调用chaincode的话智能合约会验证请求者的代码是否被篡改，因此如果想通过修改此DApp攻击的话，调用chaincode会在chaincode端失败。虽然我还没写这个核验方法。另外本身攻击者无法左右sgx端返回结果
+
+刚才看了一下发现服务器不支持sgx，但是Intel官方提供了simulate mod，翻了一圈没找着开启方法，另外原生sgx仅仅支持c语言。好在找到了ego!
+EGo感觉能封神！

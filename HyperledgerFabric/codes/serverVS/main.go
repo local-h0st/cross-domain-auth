@@ -139,6 +139,8 @@ func HandleMsgForPseudo(cipher string, contract *client.Contract, db *leveldb.DB
 func sgxVerifyID(cipher_id string) bool {
 	// 在enclave内部解密核验是否在黑名单上，true表示合法
 	// 出错了一律直接false，这里不再返回err
+	// TODO
+
 	return true
 }
 
