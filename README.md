@@ -17,6 +17,8 @@ __References:__
 * [contract-api-go repo](https://github.com/hyperledger/fabric-contract-api-go)，内含使用`contract-api-go`编写chaincode的教程
 * [fabric-gateway Guidance](https://hyperledger.github.io/fabric-gateway/)或[gateway repo](https://github.com/hyperledger/fabric-gateway/blob/main/pkg/client/)，通过gateway提供的API和chaincode交互
 * [gateway readthedoc](https://hyperledger-fabric.readthedocs.io/en/release-2.5/gateway.html#writing-client-applications)
+* [EGo document](https://docs.edgeless.systems/ego/knowledge/model)
+* [EGo repo](https://github.com/edgelesssys/ego/tree/master)
 
 *建议别看任何的中文文档，会变得不幸...英文文档会更加up-to-date，直接看也会少很多坑！*
 

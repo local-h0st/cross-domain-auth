@@ -20,3 +20,7 @@ asset-transfer-basic gateway版代码中const部分有误，将`certPath = crypt
 
 刚才看了一下发现服务器不支持sgx，但是Intel官方提供了simulate mod，翻了一圈没找着开启方法，另外原生sgx仅仅支持c语言。好在找到了ego!
 EGo感觉能封神！
+
+// “Intel的威胁模型最开始就不对，不应该隔离管理员”
+
+单开一个App管理enclave，管理员配置的肯定是对的，因此最初会有一对公私钥对，每次要询问enclave时先用公钥加密一个挑战过去，如果被恶意程序替换了那么恶意程序一定不能解开挑战，serverVS没有收到解决的挑战就不认可就拒绝发送pid认证或不认可结果。可以挑战和ID一起发，app返回挑战和true/false
