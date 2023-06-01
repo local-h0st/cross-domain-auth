@@ -8,4 +8,4 @@ PAS发送给VS的消息中就包含了pk加密的ID，由于VS无法得到sk因�
 
 serverVS发送来verifyID,pk(json(challenge,update_flag,domain,pk(ID)),sign)，challenge是为了确定interactSGX没有被恶意程序替代。update_flag代表是否需要更新黑名单，这一个数据来自于VS查询链上账本，如果PAS的黑名单更新，则调用chaincode更新update_flag为true，如果PAS收到了来自interactSGX的黑名单同步请求，则调用chaincode更新update_flag为updated(false),verifyID表示此操作为验证ID,sign是代表确实VS发来的请求，而不是其他的恶意程序发来的请求。这样可以避免恶意程序询问某个ID是否在黑名单上造成信息泄漏
 
-至于为什么interSGX不采用sign的方式表明自己的身份，，好像也可以？不过这样的话服务器会多一次解密过程。
+至于为什么interSGX不采用sign的方式表明自己的身份，，好像也可以？不过这样的话服务器会多一次解密过程。那就改成签名吧。
