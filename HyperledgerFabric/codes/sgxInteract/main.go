@@ -157,7 +157,7 @@ func signMsg(msg string) string {
 
 // /////////////////////////////////////
 func main() {
-	fmt.Println("[interactSGX] running in enclave env. listening on", serving_port)
+	fmt.Println("[sgxInteract] running in enclave env. listening on", serving_port)
 	ln, err := net.Listen("tcp", serving_port)
 	if err != nil {
 		panic(err)
