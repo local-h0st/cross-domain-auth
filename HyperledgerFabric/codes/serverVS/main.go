@@ -30,7 +30,7 @@ const (
 	gatewayPeer  = "peer0.org1.example.com"
 )
 
-var node_id string = os.Getenv("NODE_ID")
+var node_id string = os.Getenv("SERVERID")
 var node_sk []byte
 var node_pk []byte
 var serving_port string = ":54321"
@@ -92,6 +92,41 @@ func main() {
 		}
 		go handleConn(conn, contract, db)
 	}
+}
+
+type basicMsg struct {
+	Method     string
+	CipherText string
+}
+
+func parseMessage(conn net.Conn, contract *client.Contract, db *leveldb.DB) {
+	buf := make([]byte, 1024)
+	n, err := conn.Read(buf)
+	if err == io.EOF {
+		conn.Close()
+		return
+	} else if err != nil {
+		conn.Close()
+		return
+	}
+	msg := buf[:n]
+	fmt.Println("[parseMessage] msg received: ", string(msg))
+
+	basic_msg := basicMsg{}
+	err = json.Unmarshal([]byte(decryptMsg(string(msg))), &basic_msg)
+	if err != nil {
+		fmt.Println("[handleMsg] basic msg json unmarshal failed.")
+		return
+	}
+	switch basic_msg.Method {
+	case "verifyResult":
+		verifyID(basic_msg.CipherText)
+	case "updateServerInfo":
+		updateServerInfo(basic_msg.CipherText)
+	default:
+		return
+	}
+	HandleMsgForPseudo(string(msg), contract, db)
 }
 
 func HandleMsgForPseudo(cipher string, contract *client.Contract, db *leveldb.DB) error {
@@ -252,21 +287,6 @@ func handleConn(conn net.Conn, contract *client.Contract, db *leveldb.DB) {
 	for {
 		go parseMessage(conn, contract, db)
 	}
-}
-
-func parseMessage(conn net.Conn, contract *client.Contract, db *leveldb.DB) {
-	buf := make([]byte, 1024)
-	n, err := conn.Read(buf)
-	if err == io.EOF {
-		conn.Close()
-		return
-	} else if err != nil {
-		conn.Close()
-		return
-	}
-	msg := buf[:n]
-	fmt.Println("[parseMessage] msg received: ", string(msg))
-	HandleMsgForPseudo(string(msg), contract, db)
 }
 
 func decryptMsg(cipher string) string {
