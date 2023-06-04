@@ -48,6 +48,87 @@ func DecryptMsg(data, prvkey []byte) []byte {
 	return result
 }
 
+func SignMsg(data, prvkey []byte) []byte {
+	// 做了分组，没有长度限制
+	// 照抄Encrypt
+	result := []byte{}
+	data_length := len(data)
+	for block_i := 0; block_i*BlockSize < data_length; block_i++ {
+		if (block_i+1)*BlockSize > data_length {
+			block := data[block_i*BlockSize : data_length]
+			block_cipher := RsaSignWithSha256([]byte(block), prvkey)
+			result = append(result, block_cipher...)
+		} else {
+			block := data[block_i*BlockSize : (block_i+1)*BlockSize]
+			block_cipher := RsaSignWithSha256([]byte(block), prvkey)
+			result = append(result, block_cipher...)
+		}
+	}
+	return result
+}
+
+func VerifyMsgSig(data, signData, pubkey []byte) bool {
+	// 做了分组，没有长度限制
+	// 照抄Decrypt
+	data_length := len(data)
+	sig_length := len(signData)
+	if sig_length%128 != 0 {
+		panic("cipher length must be 128*k.")
+	}
+	for block_i := 0; block_i*128 < sig_length; block_i++ {
+		if (block_i+1)*BlockSize > data_length {
+			data_block := data[block_i*BlockSize : data_length]
+			sig_block := signData[block_i*128 : (block_i+1)*128]
+			if !RsaVerySignWithSha256(data_block, sig_block, pubkey) {
+				return false
+			}
+		} else {
+			data_block := data[block_i*BlockSize : (block_i+1)*BlockSize]
+			sig_block := signData[block_i*128 : (block_i+1)*128]
+			if !RsaVerySignWithSha256(data_block, sig_block, pubkey) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func UnitTest3() {
+	// sign & verify
+	PRVKEY, PUBKEY := GenRsaKey()
+	data := []byte("dddddddddddddddddddddddddddddddddddddddhhhhhhhhhhhhhhhhhhhhhhhhhhggggggggggggggggggggggggggggddddddddddddddddddddddddddddddddddddddddd")
+	fmt.Println(data, len(data))
+	sig := SignMsg(data, PRVKEY)
+	fmt.Println(sig, len(sig))
+	if VerifyMsgSig(data, sig, PUBKEY) {
+		fmt.Println("sig valid.")
+	} else {
+		fmt.Println("sig invalid.")
+	}
+}
+
+func UnitTest2() {
+	// encrypt & decrypt
+	PRVKEY, PUBKEY := GenRsaKey()
+
+	data := []byte("sdfghfvfwvwvwv")
+	fmt.Println(data, len(data))
+	data = RsaEncrypt(data, PUBKEY)
+	fmt.Println(data, len(data))
+	data = RsaDecrypt(data, PRVKEY)
+	fmt.Println(data, len(data))
+	fmt.Println([]byte{})
+	fmt.Println([]byte{})
+	data = []byte("sdfgfghgvhwbvuwbwvbwvbwibwvbqiiqbvqivqbdqvbyqyqbuyxbqwvbwvbwibwvbqiiqbvqivqbdqvbyqyqbuyxbqcbqybxacbyqbqybxcyuwvbwvbwibwvbqiiqbvqivqbdqvbyqyqbuyxbqcbqybxacbyqbqybxcyuwvbwvbwibwvbqiiqbvqivqbdqvbyqyqbuyxbqcbqybxacbyqbqybxcyucbqybxacbyqbqybxcyuabcqybvwdbvwqvbiudbvnbyxxbsybxyvbsdybyvv")
+	fmt.Println(data, len(data))
+	fmt.Println([]byte{})
+	enc_result := EncryptMsg(data, PUBKEY)
+	fmt.Println(enc_result, len(enc_result))
+	fmt.Println([]byte{})
+	dec_res := DecryptMsg(enc_result, PRVKEY)
+	fmt.Println(dec_res, len(dec_res))
+}
+
 func UnitTest() {
 	prvKey, pubKey := GenRsaKey()
 
@@ -62,6 +143,7 @@ func UnitTest() {
 	fmt.Println("cipher: ", hex.EncodeToString(ciphertext))
 	sourceData := RsaDecrypt(ciphertext, prvKey)
 	fmt.Println("decrypted: ", string(sourceData))
+
 }
 
 // RSA公钥私钥产生
