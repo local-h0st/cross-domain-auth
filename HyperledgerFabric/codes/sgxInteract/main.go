@@ -32,7 +32,7 @@ func main() {
 	fmt.Println("[sgxInteract main] running in enclave env.")
 	// 生成公私钥，获取环境变量ID
 	PRVKEY, PUBKEY = myrsa.GenRsaKey()
-	fmt.Println("[main] PUBKEY: ", string(PUBKEY))
+	fmt.Println("[main] PUBKEY ==> ", string(PUBKEY))
 	selfID = os.Getenv("SERVERID")
 	// 监听
 	ln, err := net.Listen("tcp", servingPort)

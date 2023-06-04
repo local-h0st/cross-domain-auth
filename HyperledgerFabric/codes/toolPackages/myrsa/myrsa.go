@@ -12,6 +12,42 @@ import (
 	"fmt"
 )
 
+const BlockSize int = 117 // 最大117，改小了分组会变多密文变长
+
+// 一定要用新的silce去接受！
+func EncryptMsg(data, pubkey []byte) []byte {
+	// 做了分组，没有长度限制
+	result := []byte{}
+	data_length := len(data)
+	for block_i := 0; block_i*BlockSize < data_length; block_i++ {
+		if (block_i+1)*BlockSize > data_length {
+			block := data[block_i*BlockSize : data_length]
+			block_cipher := RsaEncrypt([]byte(block), pubkey)
+			result = append(result, block_cipher...)
+		} else {
+			block := data[block_i*BlockSize : (block_i+1)*BlockSize]
+			block_cipher := RsaEncrypt([]byte(block), pubkey)
+			result = append(result, block_cipher...)
+		}
+	}
+	return result
+}
+
+func DecryptMsg(data, prvkey []byte) []byte {
+	// 做了分组，没有长度限制
+	result := []byte{}
+	data_length := len(data)
+	if data_length%128 != 0 {
+		panic("cipher length must be 128*k.")
+	}
+	for block_i := 0; block_i*128 < data_length; block_i++ {
+		block := data[block_i*128 : (block_i+1)*128]
+		block_cipher := RsaDecrypt([]byte(block), prvkey)
+		result = append(result, block_cipher...)
+	}
+	return result
+}
+
 func UnitTest() {
 	prvKey, pubKey := GenRsaKey()
 
