@@ -15,14 +15,14 @@ type BasicMsg struct {
 func (m *BasicMsg) GenSign(prvkey []byte) {
 	m.Signature = nil
 	jsonbyte, _ := json.Marshal(m)
-	m.Signature = myrsa.RsaSignWithSha256((jsonbyte), prvkey)
+	m.Signature = myrsa.SignMsg((jsonbyte), prvkey)
 }
 
 func (m BasicMsg) VerifySign(pubkey []byte) bool {
 	sign_given := m.Signature
 	m.Signature = nil
 	jsonbyte, _ := json.Marshal(m)
-	return myrsa.RsaVerySignWithSha256(jsonbyte, sign_given, pubkey)
+	return myrsa.VerifyMsgSig(jsonbyte, sign_given, pubkey)
 }
 
 type VerifyMsg struct {
@@ -44,21 +44,21 @@ type AddServerPubkeyMsg struct {
 type UpdateServerPubkeyMsg struct {
 	ServerID        string
 	ServerNewPubkey []byte
-	Signature       []byte
+	// Signature       []byte
 }
 
-func (m *UpdateServerPubkeyMsg) GenSign(prvkey []byte) {
-	m.Signature = nil
-	jsonbyte, _ := json.Marshal(m)
-	m.Signature = myrsa.RsaSignWithSha256((jsonbyte), prvkey)
-}
+// func (m *UpdateServerPubkeyMsg) GenSign(prvkey []byte) {
+// 	m.Signature = nil
+// 	jsonbyte, _ := json.Marshal(m)
+// 	m.Signature = myrsa.SignMsg((jsonbyte), prvkey)
+// }
 
-func (m UpdateServerPubkeyMsg) VerifySign(pubkey []byte) bool {
-	sign_given := m.Signature
-	m.Signature = nil
-	jsonbyte, _ := json.Marshal(m)
-	return myrsa.RsaVerySignWithSha256(jsonbyte, sign_given, pubkey)
-}
+// func (m UpdateServerPubkeyMsg) VerifySign(pubkey []byte) bool {
+// 	sign_given := m.Signature
+// 	m.Signature = nil
+// 	jsonbyte, _ := json.Marshal(m)
+// 	return myrsa.VerifyMsgSig(jsonbyte, sign_given, pubkey)
+// }
 
 type NeedPubkey struct {
 	SenderID     string

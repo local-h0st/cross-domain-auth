@@ -30,10 +30,12 @@ const servingPort string = ":55555"
 
 func main() {
 	fmt.Println("[sgxInteract main] running in enclave env.")
-	// 生成公私钥，获取环境变量ID
-	PRVKEY, PUBKEY = myrsa.GenRsaKey()
-	fmt.Println("[main] PUBKEY ==> ", string(PUBKEY))
+	// PRVKEY, PUBKEY = myrsa.GenRsaKey()	// TODO 为了方便调试暂时先指定了PRVKEY和PUBKEY，实际生成时需要rand
+	PUBKEY = []byte("-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCj8hW+keEOHHHLV/7BRO7I0j7a\nXAfxTvkiM8Qyex+aMQ7Ny+cavF4mWlJmdmGo9K3jHFH3LyEd2JuGPh5T0ad/O76C\nor+hX+RvgXkg0HS3MEQIwmzmNg57RSaNxzlJatXEfjpRJJ5Nc+dyA6hpYzaNj9LY\nKex5gvsGFpBMwQZyVwIDAQAB\n-----END PUBLIC KEY-----\n")
+	PRVKEY = []byte("-----BEGIN RSA PRIVATE KEY-----\nMIICXgIBAAKBgQCj8hW+keEOHHHLV/7BRO7I0j7aXAfxTvkiM8Qyex+aMQ7Ny+ca\nvF4mWlJmdmGo9K3jHFH3LyEd2JuGPh5T0ad/O76Cor+hX+RvgXkg0HS3MEQIwmzm\nNg57RSaNxzlJatXEfjpRJJ5Nc+dyA6hpYzaNj9LYKex5gvsGFpBMwQZyVwIDAQAB\nAoGBAKK4SZq/Qaf21X8lFIaRO4t5GcczJvL8Fkw7IxWTnNc2r+HU6slfgvcAGN73\nypCeYeSTnEsBrRXpgtun1gQNh/cqvnJU9uCpY/PVuk14vE+lYLhKkX/GAWfsmPs+\n2AUWJZeAVCJuixh9E9jnDSz+X8IWNC77cqZq8CIY/5M+nuCBAkEA1TaANVdqNBPL\n4phbC2dVFddCADWHNyaHbOrVy+bxD0x00CqyDupwvc6QMVbqpLydbbdJplZ3g6mk\nhy1HbpAJlwJBAMTYjTMSk/bLwA6D4SFGw1NyVLMOn9I6bnZzB8ryrbBdq6vbx0vV\nvGIsPNA6bKFTgUJb5DepWRMPisL02qS+dUECQQDSR0Uc1pC0uc18Nlycm5XLy5eZ\nUzF/D+3CWrzus16Ngw81+tXPZiI44E9PifQy8p6lBX6KoX6PiLDubJalkUMTAkBB\n55buwIuVl4YH1hOsBnsjFyZQhNbxleqh8cVsJ3ALmnD9qynAtCDMZa8+sDDqmoCu\nbQGtuR8/iHaW60/A1JuBAkEAgKuNrksiWi0h0KTFnassKgeaBUd2MociEK6hmKwI\nwi7kjPNHeaa1MqJMUQLhhYv33m5xuNFxIip2LTcXeJ+/5g==\n-----END RSA PRIVATE KEY-----\n")
+	// fmt.Println("[main] PUBKEY ==> ", string(bytes.Replace(PUBKEY, []byte("\n"), []byte("\\n"), -1)), "\n serving at", selfAddr)
 	selfID = os.Getenv("SERVERID")
+	serverPubkey = make(map[string]string, 0)
 	// 监听
 	ln, err := net.Listen("tcp", servingPort)
 	if err != nil {
@@ -50,24 +52,36 @@ func main() {
 func handleConn(conn net.Conn) {
 	defer conn.Close()
 	for {
-		go parseMessage(conn)
+		msg, err := parseMessage(conn)
+		if err != nil {
+			break
+		}
+		handleMsg(msg)
 	}
 }
-func parseMessage(conn net.Conn) {
-	buf := make([]byte, 1024)
+func parseMessage(conn net.Conn) ([]byte, error) {
+	buf := make([]byte, 32768)
 	n, err := conn.Read(buf)
 	if err == io.EOF {
-		conn.Close()
-		return
+		// conn.Close()
+		return nil, err
 	} else if err != nil {
-		conn.Close()
-		return
+		// conn.Close()
+		return nil, err
 	}
 	msg := buf[:n]
-	fmt.Println("[parseMessage] cipher received: ", string(msg))
-	handleMsg(msg)
+	// fmt.Println("[parseMessage] cipher received: ", msg)
+	fmt.Println("received one msg.")
+	return msg, nil
 }
 func handleMsg(cipher []byte) {
+	// defer func() {
+	// 	// recover() 可以将捕获到的panic信息打印
+	// 	if err := recover(); err != nil {
+	// 		fmt.Println(err)
+	// 		fmt.Println("[handleMsg] recovered from panic.\n")
+	// 	}
+	// }()
 	basic_msg := msgs.BasicMsg{}
 	if json.Unmarshal(decryptMsg(cipher), &basic_msg) != nil {
 		fmt.Println("[handleMsg] basic msg json unmarshal failed.")
@@ -102,7 +116,6 @@ func handleMsg(cipher []byte) {
 			return
 		}
 	}
-
 }
 
 func verifyID(jsonmsg []byte) {
@@ -127,7 +140,7 @@ func verifyID(jsonmsg []byte) {
 			request_msg.GenSign(PRVKEY)
 			request_msg_json, _ := json.Marshal(request_msg)
 			cipher := encryptMsg(request_msg_json, []byte(pas_pubkey))
-			if sendMsg(msg.DomainPasAddr, cipher) != nil {
+			if sendMsg(msg.DomainPasAddr, string(cipher)) != nil {
 				fmt.Println("[verifyID] update request send failed.")
 			}
 		}
@@ -160,32 +173,35 @@ func verifyID(jsonmsg []byte) {
 		return
 	}
 
-	if sendMsg(msg.ServerAddr, encryptMsg(jsonmsg, []byte(serverPubkey[msg.ServerID]))) != nil {
+	if sendMsg(msg.ServerAddr, string(encryptMsg(jsonmsg, []byte(serverPubkey[msg.ServerID])))) != nil {
 		fmt.Println("[verifyID] verify result send failed..")
 	}
 	return
 }
 func addServerPubkey(jsonmsg []byte) {
+	fmt.Println("exec addServerPubkey..")
 	msg := msgs.AddServerPubkeyMsg{}
 	if json.Unmarshal(jsonmsg, &msg) != nil {
 		fmt.Println("[addServerPubkey] msg json unmarshal failed.")
 		return
 	}
 	serverPubkey[msg.ServerID] = string(msg.ServerPubkey)
+	fmt.Println(serverPubkey)
 	return
 }
 func updateServerPubkey(jsonmsg []byte) {
+	fmt.Println("exec updateServerPubkey..")
 	msg := msgs.UpdateServerPubkeyMsg{}
 	if json.Unmarshal(jsonmsg, &msg) != nil {
 		fmt.Println("[updateServerPubkey] update server info msg json unmarshal failed.")
 		return
 	}
-	// 先核验旧的pk-sk的签名是否正确，随后再更新pk
-	if !msg.VerifySign([]byte(serverPubkey[msg.ServerID])) {
-		fmt.Println("[updateServerPubkey] signature invalid, reject to update pubkey.")
-		return
-	}
+	// if !msg.VerifySign([]byte(serverPubkey[msg.ServerID])) {
+	// 	fmt.Println("[updateServerPubkey] signature invalid, reject to update pubkey.")
+	// 	return
+	// }
 	serverPubkey[msg.ServerID] = string(msg.ServerNewPubkey)
+	fmt.Println(serverPubkey)
 	return
 }
 func needPubkey(jsonmsg []byte) {
@@ -211,13 +227,13 @@ func needPubkey(jsonmsg []byte) {
 	msg_to_send.Content, _ = json.Marshal(add_key_msg)
 	// add key 消息不需要签名，也不能
 	jsonmsg, _ = json.Marshal(msg_to_send)
-	if sendMsg(msg.SenderAddr, encryptMsg(jsonmsg, msg.SenderPubkey)) != nil {
+	if sendMsg(msg.SenderAddr, string(encryptMsg(jsonmsg, msg.SenderPubkey))) != nil {
 		fmt.Println("[needPubkey] pubkey send failed.")
 	}
 }
 
 // 辅助函数
-func sendMsg(addr string, data []byte) error {
+func sendMsg(addr string, data string) error {
 	// 连接到指定IP和端口
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
@@ -234,8 +250,8 @@ func sendMsg(addr string, data []byte) error {
 }
 func decryptMsg(cipher []byte) []byte {
 	// 肯定是拿自己的prvkey解密
-	return myrsa.RsaDecrypt(cipher, PRVKEY)
+	return myrsa.DecryptMsg(cipher, PRVKEY)
 }
 func encryptMsg(text []byte, pubkey []byte) []byte {
-	return myrsa.RsaEncrypt(text, pubkey)
+	return myrsa.EncryptMsg(text, pubkey)
 }
