@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"myrsa"
 	"net"
 	"os"
 	"path"
@@ -31,8 +32,7 @@ const (
 )
 
 var node_id string = os.Getenv("SERVERID")
-var node_sk []byte
-var node_pk []byte
+var PRVKEY, PUBKEY []byte
 var serving_port string = ":54321"
 var db_path string = "./db"
 
@@ -79,7 +79,9 @@ func main() {
 	contract := network.GetContract(chaincodeName)
 	initLedger(contract)
 
-	// 生成pk和sk，并直接上链公布自己的pk，这里没写
+	PRVKEY, PUBKEY = myrsa.GenRsaKey()
+	fmt.Println("PUBKEY ==> ", string(bytes.Replace(node_pk, []byte("\n"), []byte("\\n"), -1)))
+
 	fmt.Println("[main] listening on", serving_port)
 	ln, err := net.Listen("tcp", serving_port)
 	if err != nil {
@@ -94,42 +96,45 @@ func main() {
 	}
 }
 
-type basicMsg struct {
-	Method     string
-	CipherText string
+func handleConn(conn net.Conn, contract *client.Contract, db *leveldb.DB) {
+	defer conn.Close()
+	for {
+		msg, err := parseMessage(conn)
+		if err != nil {
+			break
+		}
+		handleMsg(msg, contract, db)
+	}
 }
 
-func parseMessage(conn net.Conn, contract *client.Contract, db *leveldb.DB) {
+func parseMessage(conn net.Conn) ([]byte, error) {
 	buf := make([]byte, 1024)
 	n, err := conn.Read(buf)
 	if err == io.EOF {
 		conn.Close()
-		return
+		return nil, err
 	} else if err != nil {
 		conn.Close()
-		return
+		return nil, err
 	}
 	msg := buf[:n]
-	fmt.Println("[parseMessage] msg received: ", string(msg))
+	return msg, nil
+}
 
+func handleMsg(cipher []byte, contract *client.Contract, db *leveldb.DB) {
 	basic_msg := basicMsg{}
-	err = json.Unmarshal([]byte(decryptMsg(string(msg))), &basic_msg)
-	if err != nil {
+	if json.Unmarshal([]byte(decryptMsg(cipher)), &basic_msg) != nil {
 		fmt.Println("[handleMsg] basic msg json unmarshal failed.")
 		return
 	}
 	switch basic_msg.Method {
 	case "verifyResult":
-		verifyID(basic_msg.CipherText)
+		// HERE!!从上到下重构
 	case "updateServerInfo":
 		updateServerInfo(basic_msg.CipherText)
 	default:
 		return
 	}
-	HandleMsgForPseudo(string(msg), contract, db)
-}
-
-func HandleMsgForPseudo(cipher string, contract *client.Contract, db *leveldb.DB) error {
 	// 事实上收到的是加密后的密文，需要用node_sk解密
 	// decryptMsg暂时没写
 	msg_text := decryptMsg(cipher)
@@ -171,6 +176,11 @@ func HandleMsgForPseudo(cipher string, contract *client.Contract, db *leveldb.DB
 	return nil
 }
 
+type basicMsg struct {
+	Method     string
+	CipherText string
+}
+
 func sgxVerifyID(cipher_id string) bool {
 	// 在enclave内部解密核验是否在黑名单上，true表示合法
 	// 出错了一律直接false，这里不再返回err
@@ -192,6 +202,14 @@ func isExist(contract *client.Contract, pid string) bool {
 	}
 }
 
+func decryptMsg(cipher []byte) []byte {
+	// 肯定是拿自己的prvkey解密
+	return myrsa.DecryptMsg(cipher, PRVKEY)
+}
+func encryptMsg(text []byte, pubkey []byte) []byte {
+	return myrsa.EncryptMsg(text, pubkey)
+}
+
 /*----------- 直接抄application-gateway-go -----------*/
 func initLedger(contract *client.Contract) {
 	fmt.Printf("[InitLedger] func called.\n")
@@ -203,9 +221,8 @@ func initLedger(contract *client.Contract) {
 
 	fmt.Printf("[InitLedger] executed successfully.\n")
 }
-
-// newGrpcConnection creates a gRPC connection to the Gateway server.
 func newGrpcConnection() *grpc.ClientConn {
+	// newGrpcConnection creates a gRPC connection to the Gateway server.
 	certificate, err := loadCertificate(tlsCertPath)
 	if err != nil {
 		panic(err)
@@ -222,9 +239,8 @@ func newGrpcConnection() *grpc.ClientConn {
 
 	return connection
 }
-
-// newIdentity creates a client identity for this Gateway connection using an X.509 certificate.
 func newIdentity() *identity.X509Identity {
+	// newIdentity creates a client identity for this Gateway connection using an X.509 certificate.
 	certificate, err := loadCertificate(certPath)
 	if err != nil {
 		panic(err)
@@ -237,7 +253,6 @@ func newIdentity() *identity.X509Identity {
 
 	return id
 }
-
 func loadCertificate(filename string) (*x509.Certificate, error) {
 	certificatePEM, err := os.ReadFile(filename)
 	if err != nil {
@@ -245,9 +260,8 @@ func loadCertificate(filename string) (*x509.Certificate, error) {
 	}
 	return identity.CertificateFromPEM(certificatePEM)
 }
-
-// newSign creates a function that generates a digital signature from a message digest using a private key.
 func newSign() identity.Sign {
+	// newSign creates a function that generates a digital signature from a message digest using a private key.
 	files, err := os.ReadDir(keyPath)
 	if err != nil {
 		panic(fmt.Errorf("failed to read private key directory: %w", err))
@@ -270,25 +284,11 @@ func newSign() identity.Sign {
 
 	return sign
 }
-
-// Format JSON data
 func formatJSON(data []byte) string {
+	// Format JSON data
 	var prettyJSON bytes.Buffer
 	if err := json.Indent(&prettyJSON, data, "", "  "); err != nil {
 		panic(fmt.Errorf("failed to parse JSON: %w", err))
 	}
 	return prettyJSON.String()
-}
-
-/*----------- not key funcs -----------*/
-
-func handleConn(conn net.Conn, contract *client.Contract, db *leveldb.DB) {
-	defer conn.Close()
-	for {
-		go parseMessage(conn, contract, db)
-	}
-}
-
-func decryptMsg(cipher string) string {
-	return cipher
 }
