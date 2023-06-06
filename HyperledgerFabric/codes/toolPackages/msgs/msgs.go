@@ -26,25 +26,27 @@ func (m BasicMsg) VerifySign(pubkey []byte) bool {
 }
 
 type VerifyMsg struct {
+	CipherID   []byte
+	Domain     string
+	SenderAddr string
+	// 同步blacklist用
 	UpdateFlag    bool
-	CipherID      []byte
-	Domain        string
-	ServerID      string // 来自哪个server
-	ServerAddr    string
-	DomainPasID   string
 	DomainPasAddr string // ip:port形式，例如localhost:6666
-
+	// DomainPasID   string // 多余了，能根据Domain查出来
+	// ServerID      string // 来自哪个server
+	// ServerAddr    string
 }
 
 type AddServerPubkeyMsg struct {
-	ServerID     string
+	// ServerID     string
 	ServerPubkey []byte
 }
 
 type UpdateServerPubkeyMsg struct {
-	ServerID        string
+	// ServerID        string
 	ServerNewPubkey []byte
 	// Signature       []byte
+	// 感觉senderID和serverID功能重合了，可以改一下
 }
 
 // func (m *UpdateServerPubkeyMsg) GenSign(prvkey []byte) {
@@ -59,11 +61,18 @@ type UpdateServerPubkeyMsg struct {
 // 	jsonbyte, _ := json.Marshal(m)
 // 	return myrsa.VerifyMsgSig(jsonbyte, sign_given, pubkey)
 // }
-
+/*
 type NeedPubkey struct {
+	// 小丑结构
 	SenderID     string
 	SenderPubkey []byte
 	SenderAddr   string
+}
+*/
+type DomainInfoRecord struct {
+	Domain    string
+	PasID     string
+	BlackList []string
 }
 
 // 结构内可以加入随机数防止截获密文重放攻击

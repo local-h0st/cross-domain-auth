@@ -14,14 +14,9 @@ import (
 )
 
 // 应该要互斥锁，特别是写操作
-type domainInfoRecord struct {
-	Domain    string
-	PASPubkey string
-	BlackList []string
-}
 
-var domainInfo []domainInfoRecord
-var serverPubkey map[string]string // serverid-pubkey
+var domainInfo []msgs.DomainInfoRecord
+var serverPubkey map[string]string // serverid-, all kinds of server
 var PRVKEY, PUBKEY []byte
 var selfID string
 
@@ -75,13 +70,6 @@ func parseMessage(conn net.Conn) ([]byte, error) {
 	return msg, nil
 }
 func handleMsg(cipher []byte) {
-	// defer func() {
-	// 	// recover() 可以将捕获到的panic信息打印
-	// 	if err := recover(); err != nil {
-	// 		fmt.Println(err)
-	// 		fmt.Println("[handleMsg] recovered from panic.\n")
-	// 	}
-	// }()
 	basic_msg := msgs.BasicMsg{}
 	if json.Unmarshal(decryptMsg(cipher), &basic_msg) != nil {
 		fmt.Println("[handleMsg] basic msg json unmarshal failed.")
@@ -94,10 +82,11 @@ func handleMsg(cipher []byte) {
 			if serverPubkey[basic_msg.SenderID] != "" {
 				fmt.Println("[handleMsg] pubkey already exists..")
 			} else {
-				addServerPubkey(basic_msg.Content)
+				addServerPubkey(basic_msg.SenderID, basic_msg.Content)
 			}
 		case "needPubkey":
-			needPubkey(basic_msg.Content)
+			// needPubkey(basic_msg.Content)
+			fmt.Println("hello joker.")
 		default:
 			fmt.Println("[handleMsg] unknown method.")
 			return
@@ -108,9 +97,13 @@ func handleMsg(cipher []byte) {
 		}
 		switch basic_msg.Method {
 		case "verifyID":
-			verifyID(basic_msg.Content)
+			verifyID(basic_msg.SenderID, basic_msg.Content)
 		case "updateServerPubkey":
-			updateServerPubkey(basic_msg.Content)
+			updateServerPubkey(basic_msg.SenderID, basic_msg.Content)
+		case "updateBlackist":
+			fmt.Println("original domaininfo:", domainInfo)
+			updateBlackist(basic_msg.Content)
+			fmt.Println("up-to-date domaininfo:", domainInfo)
 		default:
 			fmt.Println("[handleMsg] unknown method.")
 			return
@@ -118,7 +111,27 @@ func handleMsg(cipher []byte) {
 	}
 }
 
-func verifyID(jsonmsg []byte) {
+func updateBlackist(jsonmsg []byte) {
+	fmt.Println("exec updateBlackist..")
+	record := msgs.DomainInfoRecord{}
+	if json.Unmarshal(jsonmsg, &record) != nil {
+		fmt.Println("[updateBlacklist] json unmarshal failed.")
+		return
+	}
+	for k := range domainInfo {
+		if domainInfo[k].Domain == record.Domain {
+			domainInfo[k].PasID = record.PasID
+			domainInfo[k].BlackList = nil
+			domainInfo[k].BlackList = record.BlackList
+			return
+		}
+	}
+	domainInfo = append(domainInfo, record)
+	return
+}
+
+func verifyID(SenderID string, jsonmsg []byte) {
+	fmt.Println("exec verifyID..")
 	msg := msgs.VerifyMsg{}
 	if json.Unmarshal(jsonmsg, &msg) != nil {
 		fmt.Println("[verifyID] verify msg json unmarshal failed.")
@@ -127,10 +140,17 @@ func verifyID(jsonmsg []byte) {
 	if msg.UpdateFlag {
 		fmt.Println("[verifyID] black list out of date, now update black list, please verify later.")
 		// 仅向域PAS发送请求
-		pas_pubkey := serverPubkey[msg.DomainPasID]
-		if pas_pubkey == "" {
-			fmt.Println("[verifyID] Pas pubkey unknown. please update pas pubkey.")
+		var pas_id string
+		for _, domain_record := range domainInfo {
+			if domain_record.Domain == msg.Domain {
+				pas_id = domain_record.PasID
+				break
+			}
+		}
+		if pas_id == "" {
+			fmt.Println("[verifyID] Lack domain info, please update first.")
 		} else {
+			pas_pubkey := serverPubkey[pas_id]
 			request_msg := msgs.BasicMsg{
 				Method:    "blacklistNeedUpdate",
 				SenderID:  selfID,
@@ -167,29 +187,29 @@ func verifyID(jsonmsg []byte) {
 	}
 	verify_result.GenSign(PRVKEY)
 	jsonmsg, _ = json.Marshal(verify_result)
-	server_pubkey := serverPubkey[msg.ServerID]
+	server_pubkey := serverPubkey[SenderID]
 	if server_pubkey == "" {
 		fmt.Println("[verifyID] server pubkey unknown. please update.")
 		return
 	}
 
-	if sendMsg(msg.ServerAddr, string(encryptMsg(jsonmsg, []byte(serverPubkey[msg.ServerID])))) != nil {
+	if sendMsg(msg.SenderAddr, string(encryptMsg(jsonmsg, []byte(serverPubkey[SenderID])))) != nil {
 		fmt.Println("[verifyID] verify result send failed..")
 	}
 	return
 }
-func addServerPubkey(jsonmsg []byte) {
+func addServerPubkey(SenderID string, jsonmsg []byte) {
 	fmt.Println("exec addServerPubkey..")
 	msg := msgs.AddServerPubkeyMsg{}
 	if json.Unmarshal(jsonmsg, &msg) != nil {
 		fmt.Println("[addServerPubkey] msg json unmarshal failed.")
 		return
 	}
-	serverPubkey[msg.ServerID] = string(msg.ServerPubkey)
+	serverPubkey[SenderID] = string(msg.ServerPubkey)
 	fmt.Println(serverPubkey)
 	return
 }
-func updateServerPubkey(jsonmsg []byte) {
+func updateServerPubkey(SenderID string, jsonmsg []byte) {
 	fmt.Println("exec updateServerPubkey..")
 	msg := msgs.UpdateServerPubkeyMsg{}
 	if json.Unmarshal(jsonmsg, &msg) != nil {
@@ -200,11 +220,14 @@ func updateServerPubkey(jsonmsg []byte) {
 	// 	fmt.Println("[updateServerPubkey] signature invalid, reject to update pubkey.")
 	// 	return
 	// }
-	serverPubkey[msg.ServerID] = string(msg.ServerNewPubkey)
+	serverPubkey[SenderID] = string(msg.ServerNewPubkey)
 	fmt.Println(serverPubkey)
 	return
 }
+
+/*
 func needPubkey(jsonmsg []byte) {
+	// 小丑函数，对方没我pubkey怎么给我发的加密消息，连decrypt都过不了
 	msg := msgs.NeedPubkey{}
 	if json.Unmarshal(jsonmsg, &msg) != nil {
 		fmt.Println("[needPubkey] msg json unmarshal failed.")
@@ -215,7 +238,7 @@ func needPubkey(jsonmsg []byte) {
 	}
 	// TODO，对方没有自己的公钥
 	add_key_msg := msgs.AddServerPubkeyMsg{
-		ServerID:     selfID,
+		// ServerID:     selfID,
 		ServerPubkey: PUBKEY,
 	}
 	msg_to_send := msgs.BasicMsg{
@@ -231,7 +254,7 @@ func needPubkey(jsonmsg []byte) {
 		fmt.Println("[needPubkey] pubkey send failed.")
 	}
 }
-
+*/
 // 辅助函数
 func sendMsg(addr string, data string) error {
 	// 连接到指定IP和端口

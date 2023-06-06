@@ -41,4 +41,3 @@ Content的内容一般是json字符串，根据method的不同json结构不同�
 在verify ID的result中，content的内容不是json字符串，而是字符串"valid"或"invalid"
 在blacklistNeedUpdate和needPubkey消息中content地址
 
-md还要自己修改go.mod才能正常go build
