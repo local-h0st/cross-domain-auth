@@ -66,8 +66,7 @@ func listenForVerifyResult() {
 
 // ////////////////
 func main() {
-	wg.Add(1)
-	go listenForVerifyResult()
+
 	PRVKEY, PUBKEY = myrsa.GenRsaKey()
 	// 虽然消息有先后顺序，但是sgxInteract那边goroutine并发处理顺序就不一定了，为了有序只能采用sleep
 	// sendAddServerPubkeyMsg("testServer")
@@ -86,15 +85,19 @@ func main() {
 	sendUpdateBlacklistMsg(ServerID)
 	time.Sleep(100 * time.Millisecond)
 
-	sendVerifyIDMsg(ServerID)
-	time.Sleep(100 * time.Millisecond)
-
+	wg.Add(1)
+	go listenForVerifyResult()
+	sendVerifyIDMsg("redh3tALWAYS", ServerID)
 	wg.Wait()
+
+	// wg.Add(1)
+	// go listenForVerifyResult()
+	// sendVerifyIDMsg("gentleewind", ServerID)
+	// wg.Wait()
 }
 
-func sendVerifyIDMsg(sender_id string) {
+func sendVerifyIDMsg(id_to_verify, sender_id string) {
 	fmt.Println("sendVerifyIDMsg()")
-	id_to_verify := []byte("gentleewind")
 	basic_msg := msgs.BasicMsg{
 		Method:    "verifyID",
 		SenderID:  sender_id,
@@ -102,7 +105,7 @@ func sendVerifyIDMsg(sender_id string) {
 		Signature: nil,
 	}
 	basic_msg.Content, _ = json.Marshal(msgs.VerifyMsg{
-		CipherID:      myrsa.EncryptMsg(id_to_verify, []byte(ServerPubkey)),
+		CipherID:      myrsa.EncryptMsg([]byte(id_to_verify), []byte(ServerPubkey)),
 		Domain:        "domainA",
 		SenderAddr:    selfAddr,
 		UpdateFlag:    false,
