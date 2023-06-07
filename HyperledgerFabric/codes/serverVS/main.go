@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"msgs"
 	"myrsa"
 	"net"
 	"os"
@@ -31,12 +32,38 @@ const (
 	gatewayPeer  = "peer0.org1.example.com"
 )
 
-var node_id string = os.Getenv("SERVERID")
+const (
+	db_path       = "./db"
+	serving_port  = ":54321"
+	selfAddr      = "localhost:54321"
+	enclaveAddr   = "localhost:55555"
+	enclavePubkey = "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCj8hW+keEOHHHLV/7BRO7I0j7a\nXAfxTvkiM8Qyex+aMQ7Ny+cavF4mWlJmdmGo9K3jHFH3LyEd2JuGPh5T0ad/O76C\nor+hX+RvgXkg0HS3MEQIwmzmNg57RSaNxzlJatXEfjpRJJ5Nc+dyA6hpYzaNj9LY\nKex5gvsGFpBMwQZyVwIDAQAB\n-----END PUBLIC KEY-----\n"
+)
+
+// var node_id string = os.Getenv("SERVERID")
+var node_id string = "serverVS001"
 var PRVKEY, PUBKEY []byte
-var serving_port string = ":54321"
-var db_path string = "./db"
+
+func sendAddServerPubkeyMsg() {
+	fmt.Println("[main] sendAddServerPubkeyMsg()")
+	basic_msg := msgs.BasicMsg{
+		Method:    "addServerPubkey",
+		SenderID:  node_id,
+		Content:   nil,
+		Signature: nil,
+	}
+	basic_msg.Content, _ = json.Marshal(msgs.AddServerPubkeyMsg{
+		ServerPubkey: PUBKEY,
+	})
+	data, _ := json.Marshal(basic_msg)
+	cipher := myrsa.EncryptMsg(data, []byte(enclavePubkey))
+	sendMsg(enclaveAddr, string(cipher))
+}
 
 func main() {
+	PRVKEY, PUBKEY = myrsa.GenRsaKey()
+	fmt.Println("PUBKEY ==> ", string(bytes.Replace(PUBKEY, []byte("\n"), []byte("\\n"), -1)))
+	sendAddServerPubkeyMsg()
 	// 初始化leveldb
 	db, err := leveldb.OpenFile(db_path, nil)
 	if err != nil {
@@ -79,9 +106,6 @@ func main() {
 	contract := network.GetContract(chaincodeName)
 	initLedger(contract)
 
-	PRVKEY, PUBKEY = myrsa.GenRsaKey()
-	fmt.Println("PUBKEY ==> ", string(bytes.Replace(node_pk, []byte("\n"), []byte("\\n"), -1)))
-
 	fmt.Println("[main] listening on", serving_port)
 	ln, err := net.Listen("tcp", serving_port)
 	if err != nil {
@@ -122,73 +146,83 @@ func parseMessage(conn net.Conn) ([]byte, error) {
 }
 
 func handleMsg(cipher []byte, contract *client.Contract, db *leveldb.DB) {
-	basic_msg := basicMsg{}
+	basic_msg := msgs.BasicMsg{}
 	if json.Unmarshal([]byte(decryptMsg(cipher)), &basic_msg) != nil {
 		fmt.Println("[handleMsg] basic msg json unmarshal failed.")
 		return
 	}
+	// TODO 没有核验签名，需要确认确实是PAS发过来的，PAS初始pubkey信息可以由管理员配置，所以一定可信。可以写个程序一键配置serverVS、sgxInteract等等的初始pubkey
 	switch basic_msg.Method {
+	case "fragment":
+		fragment(basic_msg.Content, contract, db)
 	case "verifyResult":
-		// HERE!!从上到下重构
-	case "updateServerInfo":
-		updateServerInfo(basic_msg.CipherText)
+		result_msg := msgs.VerifyResultMsg{}
+		if json.Unmarshal(basic_msg.Content, &result_msg) != nil {
+			fmt.Println("verifyResult json unmarshal failed.")
+			return
+		}
+		addPseudoRecordToLedger(contract, result_msg.PID, result_msg.Result, string(result_msg.PubkeyDeviceToDomain))
+	case "queryLedger":
+		queryLedger(contract)
 	default:
 		return
 	}
-	// 事实上收到的是加密后的密文，需要用node_sk解密
-	// decryptMsg暂时没写
-	msg_text := decryptMsg(cipher)
-	// 解析msg内容
-	type message struct {
-		PID              string
-		P                string // // 门限签名技术的那个点，我也不知道用什么格式存储
-		Tag              string // node_id
-		ID_cipher        string
-		PK_device2domain string // 不知道公钥是这哪个类型。另外是建议存到数据库，还是存到内存算了？
-	}
-	var msg message
-	err := json.Unmarshal([]byte(msg_text), &msg)
-	if err != nil {
-		fmt.Println("[handleMsgForPseudo] json unmarshal failed.")
-		return err
+
+}
+
+func fragment(jsonmsg []byte, contract *client.Contract, db *leveldb.DB) {
+	fragment_msg := msgs.FragmentMsg{}
+	if json.Unmarshal(jsonmsg, &fragment_msg) != nil {
+		fmt.Println("[fragment] json unmarshal failed.")
+		return
 	}
 	// 查询pid是否存在
-	if isExist(contract, msg.PID) {
-		fmt.Println("[handleMsgForPseudo] pid exists, en error was returned.")
-		return fmt.Errorf("[err from HandleMsgForPseudo] pid exists.")
+	if isExist(contract, fragment_msg.PID) {
+		fmt.Println("[fragment] pid already exists.")
+		return
 	}
-	// 用于存储pid和点p，以json的格式
-	// 这里我选择LevelDB - Fabric自带的内嵌键值存储数据库,可以直接在chaincode中使用。
-	// 数据只保存在一个peer节点上,不可持久化。
-	// https://www.tizi365.com/archives/411.html
-	err = db.Put([]byte(msg.PID), []byte(msg_text), nil)
+	// 存储信息
+	if db.Put([]byte(fragment_msg.PID), jsonmsg, nil) != nil {
+		fmt.Printf("[fragment] put record to db failed.")
+		return
+	}
+	if fragment_msg.Tag == node_id {
+		basic_msg := msgs.BasicMsg{
+			Method:    "verifyID",
+			SenderID:  node_id,
+			Content:   nil,
+			Signature: nil,
+		}
+		basic_msg.Content, _ = json.Marshal(msgs.VerifyMsg{
+			PID:                  fragment_msg.PID,
+			PubkeyDeviceToDomain: fragment_msg.PubkeyDeviceToDomain,
+			CipherID:             myrsa.EncryptMsg(fragment_msg.CipherID, []byte(enclavePubkey)),
+			Domain:               "domainA",
+			SenderAddr:           selfAddr,
+			UpdateFlag:           false,
+			DomainPasAddr:        "",
+		})
+		basic_msg.GenSign(PRVKEY)
+		data, _ := json.Marshal(basic_msg)
+		cipher := myrsa.EncryptMsg(data, []byte(enclavePubkey))
+		sendMsg(enclaveAddr, string(cipher))
+	}
+}
+func addPseudoRecordToLedger(contract *client.Contract, pid, valid, pubkey_device_to_domain string) error {
+	evaluateResult, err := contract.EvaluateTransaction("AddPseudoRecord", pid, valid, pubkey_device_to_domain)
 	if err != nil {
-		return fmt.Errorf("[err from HandleMsgForPseudo] put record to db failed.")
+		return err
 	}
-	/*
-		val, err := db.Get([]byte(msg.PID), nil)
-		if err != nil {
-			return fmt.Errorf("[err from HandleMsgForPseudo] read record from db failed.")
-		} else {
-			fmt.Println("get from db: ", string(val))
-		}*/
-	sgxVerifyID(msg.ID_cipher)
+	fmt.Println("[addPseudoRecordToLedger] result ==>", formatJSON(evaluateResult))
 	return nil
 }
-
-type basicMsg struct {
-	Method     string
-	CipherText string
+func queryLedger(contract *client.Contract) {
+	evaluateResult, err := contract.EvaluateTransaction("QueryAll")
+	if err != nil {
+		fmt.Println("[queryLedger] transcation evaluate failed.")
+	}
+	fmt.Println("[queryLedger] result ==>", formatJSON(evaluateResult))
 }
-
-func sgxVerifyID(cipher_id string) bool {
-	// 在enclave内部解密核验是否在黑名单上，true表示合法
-	// 出错了一律直接false，这里不再返回err
-	// TODO
-
-	return true
-}
-
 func isExist(contract *client.Contract, pid string) bool {
 	evaluateResult, err := contract.EvaluateTransaction("CheckExistance", pid)
 	if err != nil {
@@ -208,6 +242,20 @@ func decryptMsg(cipher []byte) []byte {
 }
 func encryptMsg(text []byte, pubkey []byte) []byte {
 	return myrsa.EncryptMsg(text, pubkey)
+}
+func sendMsg(addr string, data string) {
+	// 连接到指定IP和端口
+	conn, err := net.Dial("tcp", addr)
+	if err != nil {
+		fmt.Println(err)
+	}
+	// 发送消息
+	n, err := fmt.Fprint(conn, data)
+	if err != nil {
+		fmt.Printf("send to %s failed.", addr)
+	} else {
+		fmt.Println("msg sent, total", n, "bytes.")
+	}
 }
 
 /*----------- 直接抄application-gateway-go -----------*/

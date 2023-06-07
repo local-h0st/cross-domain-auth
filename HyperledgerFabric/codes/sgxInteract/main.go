@@ -170,21 +170,27 @@ func verifyID(SenderID string, jsonmsg []byte) {
 	verify_result := msgs.BasicMsg{
 		Method:    "verifyResult",
 		SenderID:  selfID,
-		Content:   []byte("valid"),
+		Content:   nil,
 		Signature: nil,
+	}
+	result_msg := msgs.VerifyResultMsg{
+		PID:                  msg.PID,
+		Result:               "valid",
+		PubkeyDeviceToDomain: msg.PubkeyDeviceToDomain,
 	}
 	true_id := decryptMsg([]byte(msg.CipherID))
 	for _, domain_record := range domainInfo {
 		if domain_record.Domain == msg.Domain {
 			for _, black_name := range domain_record.BlackList {
 				if string(true_id) == black_name {
-					verify_result.Content = []byte("invalid")
+					result_msg.Result = "invalid"
 					break
 				}
 			}
 			break
 		}
 	}
+	verify_result.Content, _ = json.Marshal(result_msg)
 	verify_result.GenSign(PRVKEY)
 	jsonmsg, _ = json.Marshal(verify_result)
 	server_pubkey := serverPubkey[SenderID]
@@ -196,7 +202,6 @@ func verifyID(SenderID string, jsonmsg []byte) {
 	if sendMsg(msg.SenderAddr, string(encryptMsg(jsonmsg, []byte(serverPubkey[SenderID])))) != nil {
 		fmt.Println("[verifyID] verify result send failed..")
 	}
-	return
 }
 func addServerPubkey(SenderID string, jsonmsg []byte) {
 	fmt.Println("exec addServerPubkey..")

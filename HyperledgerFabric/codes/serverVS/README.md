@@ -26,3 +26,9 @@ EGo感觉能封神！
 单开一个App管理enclave，管理员配置的肯定是对的，因此最初会有一对公私钥对，每次要询问enclave时先用公钥加密一个挑战过去，如果被恶意程序替换了那么恶意程序一定不能解开挑战，serverVS没有收到解决的挑战就不认可就拒绝发送pid认证或不认可结果。可以挑战和ID一起发，app返回挑战和true/false
 
 破案了，没有空格截断，只是我没打引号罢了
+
+	// 这里我选择LevelDB - Fabric自带的内嵌键值存储数据库,可以直接在chaincode中使用。
+	// 数据只保存在一个peer节点上,不可持久化。
+	// https://www.tizi365.com/archives/411.html
+
+		// 	val, err := db.Get([]byte(msg.PID), nil)
