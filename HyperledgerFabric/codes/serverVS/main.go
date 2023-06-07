@@ -136,7 +136,7 @@ func handleConn(conn net.Conn, contract *client.Contract, db *leveldb.DB) {
 }
 
 func parseMessage(conn net.Conn) ([]byte, error) {
-	buf := make([]byte, 1024)
+	buf := make([]byte, 32768)
 	n, err := conn.Read(buf)
 	if err == io.EOF {
 		return nil, err
@@ -173,6 +173,7 @@ func handleMsg(cipher []byte, contract *client.Contract, db *leveldb.DB) {
 }
 
 func fragment(jsonmsg []byte, contract *client.Contract, db *leveldb.DB) {
+	fmt.Println("[fragment] exec...")
 	fragment_msg := msgs.FragmentMsg{}
 	if json.Unmarshal(jsonmsg, &fragment_msg) != nil {
 		fmt.Println("[fragment] json unmarshal failed.")
@@ -211,11 +212,11 @@ func fragment(jsonmsg []byte, contract *client.Contract, db *leveldb.DB) {
 	}
 }
 func addPseudoRecordToLedger(contract *client.Contract, pid, valid, pubkey_device_to_domain string) error {
-	evaluateResult, err := contract.EvaluateTransaction("AddPseudoRecord", pid, valid, pubkey_device_to_domain)
+	_, err := contract.EvaluateTransaction("AddPseudoRecord", pid, valid, pubkey_device_to_domain)
 	if err != nil {
 		return err
 	}
-	fmt.Println("[addPseudoRecordToLedger] result ==>", formatJSON(evaluateResult))
+	// fmt.Println("[addPseudoRecordToLedger] result ==>", evaluateResult)
 	return nil
 }
 func queryLedger(contract *client.Contract) {

@@ -25,6 +25,8 @@ func main() {
 	sendFragmentMsg()
 	time.Sleep(500 * time.Millisecond)
 	sendQueryLedgerMsg()
+	time.Sleep(500 * time.Millisecond)
+	sendQueryLedgerMsg()
 }
 
 func sendFragmentMsg() {

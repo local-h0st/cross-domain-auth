@@ -11,3 +11,13 @@ serverVS两条消息都json unmarshal failed了
 其他全停了，chaincode先跑着无所谓
 
 第二次测试重新按照上面的顺序来
+部署chaincode直接卡死
+太有所谓了一定要先停了chaincode
+serverVS输出[addPseudoRecordToLedger] result ==> []
+没问题肯定是nil，demo里面就这么写的
+好怪不应该有问题的，可能是当时没有停chaincode的缘故
+全停了重开试试
+没用，再查询试试
+也没用
+addPseudoRecordToLedger不执行啊
+算了下次再说今天先睡觉

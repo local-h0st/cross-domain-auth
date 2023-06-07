@@ -41,3 +41,41 @@
 01:15:02.789836 version@stat F·[1] S·214B[214B] Sc·[0.25]
 01:15:02.805462 db@janitor F·3 G·0
 01:15:02.805891 db@open done T·18.971677ms
+=============== Jun 8, 2023 (CST) ===============
+01:44:01.484993 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+01:44:01.487346 version@stat F·[1] S·214B[214B] Sc·[0.25]
+01:44:01.487367 db@open opening
+01:44:01.487426 journal@recovery F·1
+01:44:01.487877 journal@recovery recovering @9
+01:44:01.490103 version@stat F·[1] S·214B[214B] Sc·[0.25]
+01:44:01.502666 db@janitor F·3 G·0
+01:44:01.502713 db@open done T·15.335418ms
+=============== Jun 8, 2023 (CST) ===============
+01:47:42.687056 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+01:47:42.687556 version@stat F·[1] S·214B[214B] Sc·[0.25]
+01:47:42.687611 db@open opening
+01:47:42.687689 journal@recovery F·1
+01:47:42.692740 journal@recovery recovering @11
+01:47:42.693707 version@stat F·[1] S·214B[214B] Sc·[0.25]
+01:47:42.706638 db@janitor F·3 G·0
+01:47:42.706685 db@open done T·19.029852ms
+=============== Jun 8, 2023 (CST) ===============
+01:50:22.141425 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+01:50:22.141674 version@stat F·[1] S·214B[214B] Sc·[0.25]
+01:50:22.141686 db@open opening
+01:50:22.141749 journal@recovery F·1
+01:50:22.146065 journal@recovery recovering @13
+01:50:22.151041 memdb@flush created L0@15 N·1 S·386B "IAm..ark,v4":"IAm..ark,v4"
+01:50:22.151256 version@stat F·[2] S·600B[600B] Sc·[0.50]
+01:50:22.161748 db@janitor F·4 G·0
+01:50:22.161792 db@open done T·20.098107ms
+=============== Jun 8, 2023 (CST) ===============
+02:05:50.763999 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+02:05:50.767407 version@stat F·[2] S·600B[600B] Sc·[0.50]
+02:05:50.767430 db@open opening
+02:05:50.767496 journal@recovery F·1
+02:05:50.767967 journal@recovery recovering @16
+02:05:50.775699 memdb@flush created L0@18 N·1 S·386B "IAm..ark,v6":"IAm..ark,v6"
+02:05:50.775928 version@stat F·[3] S·986B[986B] Sc·[0.75]
+02:05:50.790759 db@janitor F·5 G·0
+02:05:50.790811 db@open done T·23.369598ms
