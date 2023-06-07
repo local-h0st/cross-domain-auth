@@ -63,6 +63,10 @@ func sendAddServerPubkeyMsg() {
 func main() {
 	PRVKEY, PUBKEY = myrsa.GenRsaKey()
 	fmt.Println("PUBKEY ==> ", string(bytes.Replace(PUBKEY, []byte("\n"), []byte("\\n"), -1)))
+
+	// 方便测试就直接指定了
+	PRVKEY = []byte("-----BEGIN RSA PRIVATE KEY-----\nMIICXQIBAAKBgQDQlXmFEiNzbO0iHjdYIUPvbWmqPmMJcrGVLjRUrr2HtURh9lcr\nGsti1r4BesFcuS+QAzBlFZsp50Ytae0snr26jnFLOpBGscCDLsyPrL3dlUnWGnQY\n5SOFjvVpAjsuc16W0TXXzdoaW6yZwX+tKd2yLkgbcL0alZeTI1v8lJN9YQIDAQAB\nAoGBAL7k/fk+l3lM6F3AP7CFiVI31Wu8exEricDZL4WNAuKPkA0D0dUeSaOkmvJp\nsUu2JARuFr18n6wjAMQRXMHoagQKt4zKB4Kcv6vNKNC+DLQVnd9WvujwDYChlty7\nOd+vuK5tXBIUi5FwF/QjHhOIj8EKhb228sxqXshEViuHO3dtAkEA4O6YM2cZp2Za\ngJODiRcXOjXoSkSVMqYfhARGiWRvJ0DuGAkksBAzTSxPeu0N6yEPv2Cddw2HCa1+\n24+Mqm6PPwJBAO1k0wYePhClgbTh/6sUCx5lyK+l+oTJ7H5heb0LthNX7n/B1xKv\nNr2JZtRRQ+QSRK+oTztVDSd87C0jRgITa18CQHdLU4F/nsV/rWQf2FUu3+zJhmdN\nNGvmWzSjJ93aXHFPKHeq8cBG905ov8aMTyNzJ2zyitEHZaUmVO+RlKMXe/UCQQCR\nSUxxCR849uHr/wiG/kxTvT1WaoFotV/cdPGZhkpXilA3tj1XfQ5Gb4oUVOv08E1D\nKAHdsQ7M5QJyGY1mBdaHAkAf5Y1dfFOOTQqZNkSWgm0lFfX1tfUPMD1/XnfXBgxr\n4VvDGz66MsAvh1v4qYw8GcKoGxetTWS8yzIYiBMgqD5l\n-----END RSA PRIVATE KEY-----\n")
+	PUBKEY = []byte("-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDQlXmFEiNzbO0iHjdYIUPvbWmq\nPmMJcrGVLjRUrr2HtURh9lcrGsti1r4BesFcuS+QAzBlFZsp50Ytae0snr26jnFL\nOpBGscCDLsyPrL3dlUnWGnQY5SOFjvVpAjsuc16W0TXXzdoaW6yZwX+tKd2yLkgb\ncL0alZeTI1v8lJN9YQIDAQAB\n-----END PUBLIC KEY-----\n")
 	sendAddServerPubkeyMsg()
 	// 初始化leveldb
 	db, err := leveldb.OpenFile(db_path, nil)
@@ -135,20 +139,18 @@ func parseMessage(conn net.Conn) ([]byte, error) {
 	buf := make([]byte, 1024)
 	n, err := conn.Read(buf)
 	if err == io.EOF {
-		conn.Close()
 		return nil, err
 	} else if err != nil {
-		conn.Close()
 		return nil, err
 	}
-	msg := buf[:n]
-	return msg, nil
+	return buf[:n], nil
 }
 
 func handleMsg(cipher []byte, contract *client.Contract, db *leveldb.DB) {
 	basic_msg := msgs.BasicMsg{}
-	if json.Unmarshal([]byte(decryptMsg(cipher)), &basic_msg) != nil {
-		fmt.Println("[handleMsg] basic msg json unmarshal failed.")
+	jsonstr := decryptMsg(cipher)
+	if json.Unmarshal(jsonstr, &basic_msg) != nil {
+		fmt.Println("[handleMsg] basic msg json unmarshal failed:", string(jsonstr))
 		return
 	}
 	// TODO 没有核验签名，需要确认确实是PAS发过来的，PAS初始pubkey信息可以由管理员配置，所以一定可信。可以写个程序一键配置serverVS、sgxInteract等等的初始pubkey

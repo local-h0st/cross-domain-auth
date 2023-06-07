@@ -25,7 +25,8 @@ const servingPort string = ":55555"
 
 func main() {
 	fmt.Println("[sgxInteract main] running in enclave env.")
-	// PRVKEY, PUBKEY = myrsa.GenRsaKey()	// TODO 为了方便调试暂时先指定了PRVKEY和PUBKEY，实际生成时需要rand
+	PRVKEY, PUBKEY = myrsa.GenRsaKey()
+	// TODO 为了方便调试暂时先指定了PRVKEY和PUBKEY
 	PUBKEY = []byte("-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCj8hW+keEOHHHLV/7BRO7I0j7a\nXAfxTvkiM8Qyex+aMQ7Ny+cavF4mWlJmdmGo9K3jHFH3LyEd2JuGPh5T0ad/O76C\nor+hX+RvgXkg0HS3MEQIwmzmNg57RSaNxzlJatXEfjpRJJ5Nc+dyA6hpYzaNj9LY\nKex5gvsGFpBMwQZyVwIDAQAB\n-----END PUBLIC KEY-----\n")
 	PRVKEY = []byte("-----BEGIN RSA PRIVATE KEY-----\nMIICXgIBAAKBgQCj8hW+keEOHHHLV/7BRO7I0j7aXAfxTvkiM8Qyex+aMQ7Ny+ca\nvF4mWlJmdmGo9K3jHFH3LyEd2JuGPh5T0ad/O76Cor+hX+RvgXkg0HS3MEQIwmzm\nNg57RSaNxzlJatXEfjpRJJ5Nc+dyA6hpYzaNj9LYKex5gvsGFpBMwQZyVwIDAQAB\nAoGBAKK4SZq/Qaf21X8lFIaRO4t5GcczJvL8Fkw7IxWTnNc2r+HU6slfgvcAGN73\nypCeYeSTnEsBrRXpgtun1gQNh/cqvnJU9uCpY/PVuk14vE+lYLhKkX/GAWfsmPs+\n2AUWJZeAVCJuixh9E9jnDSz+X8IWNC77cqZq8CIY/5M+nuCBAkEA1TaANVdqNBPL\n4phbC2dVFddCADWHNyaHbOrVy+bxD0x00CqyDupwvc6QMVbqpLydbbdJplZ3g6mk\nhy1HbpAJlwJBAMTYjTMSk/bLwA6D4SFGw1NyVLMOn9I6bnZzB8ryrbBdq6vbx0vV\nvGIsPNA6bKFTgUJb5DepWRMPisL02qS+dUECQQDSR0Uc1pC0uc18Nlycm5XLy5eZ\nUzF/D+3CWrzus16Ngw81+tXPZiI44E9PifQy8p6lBX6KoX6PiLDubJalkUMTAkBB\n55buwIuVl4YH1hOsBnsjFyZQhNbxleqh8cVsJ3ALmnD9qynAtCDMZa8+sDDqmoCu\nbQGtuR8/iHaW60/A1JuBAkEAgKuNrksiWi0h0KTFnassKgeaBUd2MociEK6hmKwI\nwi7kjPNHeaa1MqJMUQLhhYv33m5xuNFxIip2LTcXeJ+/5g==\n-----END RSA PRIVATE KEY-----\n")
 	// fmt.Println("[main] PUBKEY ==> ", string(bytes.Replace(PUBKEY, []byte("\n"), []byte("\\n"), -1)), "\n serving at", selfAddr)
@@ -110,7 +111,6 @@ func handleMsg(cipher []byte) {
 		}
 	}
 }
-
 func updateBlackist(jsonmsg []byte) {
 	fmt.Println("exec updateBlackist..")
 	record := msgs.DomainInfoRecord{}
@@ -129,7 +129,6 @@ func updateBlackist(jsonmsg []byte) {
 	domainInfo = append(domainInfo, record)
 	return
 }
-
 func verifyID(SenderID string, jsonmsg []byte) {
 	fmt.Println("exec verifyID..")
 	msg := msgs.VerifyMsg{}

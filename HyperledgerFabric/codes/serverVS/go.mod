@@ -16,3 +16,8 @@ require (
 	google.golang.org/grpc v1.55.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 )
+
+require myrsa v0.0.0-00010101000000-000000000000
+replace myrsa => ../toolPackages/myrsa
+require msgs v0.0.0-00010101000000-000000000000
+replace msgs => ../toolPackages/msgs

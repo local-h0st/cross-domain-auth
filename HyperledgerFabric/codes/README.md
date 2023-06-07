@@ -1,0 +1,13 @@
+# 究极测试开始
+先start test network部署demo，部署真有点慢
+以非enclave模式启动sgxInteract
+启动serverVS
+输出信息暂时正常
+serverVS输出的pubkey和sgxInteract输出的pubkey一致
+测试不应该向sgxInteract发送任何消息
+运行genPayloadForServerVS
+serverVS两条消息都json unmarshal failed了
+但是没有panic，说明不是公钥的问题
+其他全停了，chaincode先跑着无所谓
+
+第二次测试重新按照上面的顺序来
