@@ -21,3 +21,5 @@ serverVS输出[addPseudoRecordToLedger] result ==> []
 也没用
 addPseudoRecordToLedger不执行啊
 算了下次再说今天先睡觉
+
+我靠我知道问题了！我去gateway-go的示例代码看了一下，写入Ledger应该是Submit而不是Evaluate，我就是chaincode怎么会写错呢，账本不修改只能serverVS出问题！【来自iPhone 半夜在GitHub上翻看自己代码发现不对劲然后在iPhone的Safari上登陆codeserver来这个markdown里面记录想法然后心满意足地睡觉明天准备毛概期末考试】
