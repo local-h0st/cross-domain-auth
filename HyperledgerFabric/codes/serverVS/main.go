@@ -212,7 +212,7 @@ func fragment(jsonmsg []byte, contract *client.Contract, db *leveldb.DB) {
 	}
 }
 func addPseudoRecordToLedger(contract *client.Contract, pid, valid, pubkey_device_to_domain string) error {
-	_, err := contract.EvaluateTransaction("AddPseudoRecord", pid, valid, pubkey_device_to_domain)
+	_, err := contract.SubmitTransaction("AddPseudoRecord", pid, valid, pubkey_device_to_domain)
 	if err != nil {
 		return err
 	}

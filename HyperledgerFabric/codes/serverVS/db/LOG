@@ -79,3 +79,20 @@
 02:05:50.775928 version@stat F·[3] S·986B[986B] Sc·[0.75]
 02:05:50.790759 db@janitor F·5 G·0
 02:05:50.790811 db@open done T·23.369598ms
+=============== Jun 8, 2023 (CST) ===============
+17:15:16.791685 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+17:15:16.796785 version@stat F·[3] S·986B[986B] Sc·[0.75]
+17:15:16.796807 db@open opening
+17:15:16.796867 journal@recovery F·1
+17:15:16.797317 journal@recovery recovering @19
+17:15:16.806307 memdb@flush created L0@21 N·2 S·575B "IAm..ark,v9":"IAm..ark,v8"
+17:15:16.810530 version@stat F·[4] S·1KiB[1KiB] Sc·[1.00]
+17:15:16.826731 db@janitor F·6 G·0
+17:15:16.826839 db@open done T·30.019562ms
+17:15:16.827075 table@compaction L0·3 -> L1·0 S·1KiB Q·10
+17:15:16.835802 table@build created L1@24 N·1 S·386B "IAm..ark,v9":"IAm..ark,v9"
+17:15:16.835957 version@stat F·[1 1] S·600B[214B 386B] Sc·[0.25 0.00]
+17:15:16.843115 table@compaction committed F-2 S-961B Ke·0 D·3 T·15.992999ms
+17:15:16.843385 table@remove removed @21
+17:15:16.843524 table@remove removed @18
+17:15:16.843661 table@remove removed @15
