@@ -96,3 +96,102 @@
 17:15:16.843385 table@remove removed @21
 17:15:16.843524 table@remove removed @18
 17:15:16.843661 table@remove removed @15
+=============== Jun 11, 2023 (CST) ===============
+03:01:33.631973 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+03:01:33.637910 version@stat F·[1 1] S·600B[214B 386B] Sc·[0.25 0.00]
+03:01:33.638030 db@open opening
+03:01:33.638145 journal@recovery F·1
+03:01:33.638600 journal@recovery recovering @22
+03:01:33.646934 memdb@flush created L0@25 N·1 S·386B "IAm..ark,v11":"IAm..ark,v11"
+03:01:33.647354 version@stat F·[2 1] S·986B[600B 386B] Sc·[0.50 0.00]
+03:01:33.660408 db@janitor F·5 G·0
+03:01:33.660503 db@open done T·22.415892ms
+=============== Jun 11, 2023 (CST) ===============
+03:02:59.889358 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+03:02:59.889583 version@stat F·[2 1] S·986B[600B 386B] Sc·[0.50 0.00]
+03:02:59.889594 db@open opening
+03:02:59.889642 journal@recovery F·1
+03:02:59.893064 journal@recovery recovering @26
+03:02:59.900512 memdb@flush created L0@28 N·1 S·386B "IAm..ark,v13":"IAm..ark,v13"
+03:02:59.900740 version@stat F·[3 1] S·1KiB[986B 386B] Sc·[0.75 0.00]
+03:02:59.910385 db@janitor F·6 G·0
+03:02:59.910425 db@open done T·20.822399ms
+=============== Jun 11, 2023 (CST) ===============
+03:06:17.144135 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+03:06:17.144348 version@stat F·[3 1] S·1KiB[986B 386B] Sc·[0.75 0.00]
+03:06:17.144358 db@open opening
+03:06:17.144409 journal@recovery F·1
+03:06:17.145141 journal@recovery recovering @29
+03:06:17.146386 version@stat F·[3 1] S·1KiB[986B 386B] Sc·[0.75 0.00]
+03:06:17.157963 db@janitor F·6 G·0
+03:06:17.158060 db@open done T·13.68637ms
+=============== Jun 11, 2023 (CST) ===============
+03:10:06.992110 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+03:10:06.995238 version@stat F·[3 1] S·1KiB[986B 386B] Sc·[0.75 0.00]
+03:10:06.995263 db@open opening
+03:10:06.995336 journal@recovery F·1
+03:10:06.995726 journal@recovery recovering @31
+03:10:06.998404 version@stat F·[3 1] S·1KiB[986B 386B] Sc·[0.75 0.00]
+03:10:07.012206 db@janitor F·6 G·0
+03:10:07.012305 db@open done T·17.022896ms
+=============== Jun 11, 2023 (CST) ===============
+04:16:54.882340 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+04:16:54.884034 version@stat F·[3 1] S·1KiB[986B 386B] Sc·[0.75 0.00]
+04:16:54.884128 db@open opening
+04:16:54.884246 journal@recovery F·1
+04:16:54.884851 journal@recovery recovering @33
+04:16:54.894100 memdb@flush created L0@35 N·1 S·472B "IAm..ark,v15":"IAm..ark,v15"
+04:16:54.896457 version@stat F·[4 1] S·1KiB[1KiB 386B] Sc·[1.00 0.00]
+04:16:54.909720 db@janitor F·7 G·0
+04:16:54.909760 db@open done T·25.578988ms
+04:16:54.909876 table@move L0@6 -> L1
+04:16:54.910996 version@stat F·[3 2] S·1KiB[1KiB 600B] Sc·[0.75 0.00]
+=============== Jun 11, 2023 (CST) ===============
+04:45:05.236950 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+04:45:05.241516 version@stat F·[3 2] S·1KiB[1KiB 600B] Sc·[0.75 0.00]
+04:45:05.241557 db@open opening
+04:45:05.241633 journal@recovery F·1
+04:45:05.242136 journal@recovery recovering @36
+04:45:05.250829 memdb@flush created L0@38 N·2 S·721B "IAm..ark,v17":"not..PID,v18"
+04:45:05.253578 version@stat F·[4 2] S·2KiB[1KiB 600B] Sc·[1.00 0.00]
+04:45:05.266484 db@janitor F·8 G·0
+04:45:05.266586 db@open done T·25.012847ms
+04:45:05.266743 table@compaction L0·4 -> L1·1 S·2KiB Q·19
+04:45:05.279164 table@build created L1@41 N·2 S·721B "IAm..ark,v17":"not..PID,v18"
+04:45:05.279485 version@stat F·[0 2] S·935B[0B 935B] Sc·[0.00 0.00]
+04:45:05.283357 table@compaction committed F-4 S-1KiB Ke·0 D·4 T·16.524907ms
+04:45:05.283591 table@remove removed @38
+04:45:05.283741 table@remove removed @35
+04:45:05.284294 table@remove removed @28
+04:45:05.284484 table@remove removed @25
+04:45:05.284605 table@remove removed @24
+=============== Jun 11, 2023 (CST) ===============
+04:51:45.865266 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+04:51:45.867303 version@stat F·[0 2] S·935B[0B 935B] Sc·[0.00 0.00]
+04:51:45.867319 db@open opening
+04:51:45.867375 journal@recovery F·1
+04:51:45.867878 journal@recovery recovering @39
+04:51:45.873609 memdb@flush created L0@42 N·2 S·722B "IAm..ark,v20":"not..PID,v21"
+04:51:45.873832 version@stat F·[1 2] S·1KiB[722B 935B] Sc·[0.25 0.00]
+04:51:45.886076 db@janitor F·5 G·0
+04:51:45.886120 db@open done T·18.792589ms
+=============== Jun 11, 2023 (CST) ===============
+04:59:58.082810 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+04:59:58.084323 version@stat F·[1 2] S·1KiB[722B 935B] Sc·[0.25 0.00]
+04:59:58.084346 db@open opening
+04:59:58.084424 journal@recovery F·1
+04:59:58.084886 journal@recovery recovering @43
+04:59:58.091235 memdb@flush created L0@45 N·2 S·722B "IAm..ark,v23":"not..PID,v24"
+04:59:58.091706 version@stat F·[2 2] S·2KiB[1KiB 935B] Sc·[0.50 0.00]
+04:59:58.104297 db@janitor F·6 G·0
+04:59:58.104405 db@open done T·20.046567ms
+=============== Jun 11, 2023 (CST) ===============
+05:10:03.609271 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+05:10:03.611484 version@stat F·[2 2] S·2KiB[1KiB 935B] Sc·[0.50 0.00]
+05:10:03.611509 db@open opening
+05:10:03.611584 journal@recovery F·1
+05:10:03.612012 journal@recovery recovering @46
+05:10:03.616931 memdb@flush created L0@48 N·1 S·480B "IAm..ark,v26":"IAm..ark,v26"
+05:10:03.617164 version@stat F·[3 2] S·2KiB[1KiB 935B] Sc·[0.75 0.00]
+05:10:03.628111 db@janitor F·7 G·0
+05:10:03.628206 db@open done T·16.685787ms

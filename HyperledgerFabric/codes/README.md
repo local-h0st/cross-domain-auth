@@ -27,3 +27,11 @@ addPseudoRecordToLedger不执行啊
 成功查到记录！
 先commit and push
 但是不显示pid也就是key，需要稍稍调一下输出
+
+管理员在预设阶段自己需要生成一堆密钥，用于溯源时的身份认证。
+溯源时管理员向serverVS发送消息，用自己的私钥签名，serverVS收到消息就核验签名，如果通过那么就返回fragment
+
+第二阶段判断pid是否valid并返回结果最好让链码来做而不是交给PASB来做
+
+发现true id解码不对，会不会是`[]byte`外面再套一个`[]byte`的原因？
+破案了，不知道脑子怎么想的在serverVS里面又对CipherID加密了一回，，无语

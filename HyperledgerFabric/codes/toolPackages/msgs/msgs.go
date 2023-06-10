@@ -90,6 +90,7 @@ type DomainInfoRecord struct {
 type FragmentMsg struct {
 	Tag                  string // node_id
 	PID                  string
+	Domain               string
 	Point                []byte // 门限签名技术的那个点，我也不知道用什么格式存储
 	CipherID             []byte
 	PubkeyDeviceToDomain []byte

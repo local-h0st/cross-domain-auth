@@ -177,10 +177,13 @@ func verifyID(SenderID string, jsonmsg []byte) {
 		Result:               "valid",
 		PubkeyDeviceToDomain: msg.PubkeyDeviceToDomain,
 	}
-	true_id := decryptMsg([]byte(msg.CipherID))
+	true_id := decryptMsg(msg.CipherID)
+	fmt.Println("true id: ", string(true_id))
 	for _, domain_record := range domainInfo {
 		if domain_record.Domain == msg.Domain {
+			fmt.Println("find domain", domain_record.Domain)
 			for _, black_name := range domain_record.BlackList {
+				fmt.Println("comparing: ", black_name)
 				if string(true_id) == black_name {
 					result_msg.Result = "invalid"
 					break
@@ -189,6 +192,7 @@ func verifyID(SenderID string, jsonmsg []byte) {
 			break
 		}
 	}
+	// 有可能lack domain info，需要同步信息
 	verify_result.Content, _ = json.Marshal(result_msg)
 	verify_result.GenSign(PRVKEY)
 	jsonmsg, _ = json.Marshal(verify_result)

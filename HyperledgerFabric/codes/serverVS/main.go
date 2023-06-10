@@ -153,7 +153,7 @@ func handleMsg(cipher []byte, contract *client.Contract, db *leveldb.DB) {
 		fmt.Println("[handleMsg] basic msg json unmarshal failed:", string(jsonstr))
 		return
 	}
-	// TODO 没有核验签名，需要确认确实是PAS发过来的，PAS初始pubkey信息可以由管理员配置，所以一定可信。可以写个程序一键配置serverVS、sgxInteract等等的初始pubkey
+	// TODO 前3个case没有核验签名，需要确认确实是PAS发过来的，PAS初始pubkey信息可以由管理员配置，所以一定可信。可以写个程序一键配置serverVS、sgxInteract等等的初始pubkey
 	switch basic_msg.Method {
 	case "fragment":
 		fragment(basic_msg.Content, contract, db)
@@ -166,6 +166,13 @@ func handleMsg(cipher []byte, contract *client.Contract, db *leveldb.DB) {
 		addPseudoRecordToLedger(contract, result_msg.PID, result_msg.Result, string(result_msg.PubkeyDeviceToDomain))
 	case "queryLedger":
 		queryLedger(contract)
+	case "getFragment":
+		// 需要核验管理员admin的签名是否正确
+		data, err := db.Get(basic_msg.Content, nil)
+		if err != nil {
+			fmt.Println("level db get fragment failed.")
+		}
+		fmt.Println("fragment ==> ", string(data))
 	default:
 		return
 	}
@@ -199,8 +206,8 @@ func fragment(jsonmsg []byte, contract *client.Contract, db *leveldb.DB) {
 		basic_msg.Content, _ = json.Marshal(msgs.VerifyMsg{
 			PID:                  fragment_msg.PID,
 			PubkeyDeviceToDomain: fragment_msg.PubkeyDeviceToDomain,
-			CipherID:             myrsa.EncryptMsg(fragment_msg.CipherID, []byte(enclavePubkey)),
-			Domain:               "domainA",
+			CipherID:             fragment_msg.CipherID,
+			Domain:               fragment_msg.Domain,
 			SenderAddr:           selfAddr,
 			UpdateFlag:           false,
 			DomainPasAddr:        "",
