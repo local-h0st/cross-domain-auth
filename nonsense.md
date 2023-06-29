@@ -6,6 +6,8 @@
 * Fabric[中文文档](https://hyperledger.github.io/)（欸好像不是这个网址），github.io的，不过看着好像没什么用
 
 __done:__
+* [x] 设计报告！
+* [x] sgx交互！
 * [x] 每个项目下面都放一个nonsense.md，专门记录废话，README只放关键信息
 * [x] 整理项目的markdown，FabApp和chaincode交互时写的markdown乱七八糟
 * [x] 去command reference看看peer chaincode invoke和peer chaincode query
@@ -27,7 +29,7 @@ Fabric不同版本的问题：1.4链码安装在peer上，2.0链码容器独立�
 
 
 
-国赛某道题的payload...
+CTF国赛某道题的payload...
 {
     "spring": {
         "cloud": {

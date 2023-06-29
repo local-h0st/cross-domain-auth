@@ -1,11 +1,10 @@
 # Project cross-domain-auth - AlternateWorld
+🎉初赛作品提交正式截止，目前结果尚未揭晓。
 🎉首先庆祝第一阶段校赛顺利结束！
 ## OverView
 这个项目是做跨域认证的，基于Hyperledger Fabric 2.5，采用Intel SGX作为Truetsed Execution Environment的硬件支持。整个项目需要编写chaincode、VS上的服务端程序、PAS上的服务端程序，device上的用户程序Client App。由于服务端程序涉及到调用智能合约，因此也属于DApp的范畴，这部分需要用到相关的go sdk开发（现采用fabric-gateway）
 
 __TODO:__
-* [ ] 设计报告！
-* [ ] sgx交互！
 * [ ] 继续开发chaincode，FabApp4VS，命名规则最好统一
 * [ ] 有必要看一看Key Concepts，以及test_network的tutorial细节，另外目录重命名了，遇到问题了再慢慢改
 
@@ -38,22 +37,20 @@ __References:__
 
 ## 项目结构
 每个README同目录下都有一个用于记录中间过程的nonsense.md
-#### [MainChaincode](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/demo)
-链码部分，主要提供了和账本交互的接口
+### 系统主体
+* [MainChaincode](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/demo)：链码部分，主要提供了和账本交互的接口
+* [FabApp4VS](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/serverVS)：每一台运行chaincode的peer都需要安装此服务程序，用于和链码配套完成有关匿名身份的部分，通过fabric-gateway和链码demo交互
+* [sgxInteract](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/sgxInteract)：用于和FabApp4VS配套，负责可信执行
+* [toolPackages](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/toolPackages)：package包含统一的消息结构和RSA的实现
 
-#### [FabApp4VS](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/serverVS)
-每一台运行chaincode的peer都需要安装此服务程序，用于和链码配套完成有关匿名身份的部分，通过fabric-gateway和链码demo交互
+### 测试环境
+* [devMod](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/shells/devModOn)：用于测试链码
+* [startTestNetwork](https://github.com/local-h0st/cross-domain-auth/blob/master/HyperledgerFabric/shells/testNetworkStart)：用于测试整个系统
 
-#### [sendMsg](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/tools/sendMsg)
-用于向指定端口发送指定消息，通常用来向FabApp4VS发送消息，测试FabApp4VS功能是否正常
+### 测试工具
+* [genPayloadForServerVS](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/genPayloadForServerVS)：用于模拟各种设备发送信息以测试系统各个功能能否正常完成
+* [sendMsg](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/tools/sendMsg)：用于向指定端口发送指定消息，通常用来向FabApp4VS发送消息，测试FabApp4VS功能是否正常
+* [genJSON](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/tools/genJSON)：产生指定格式的json字符串用于测试，通过sendMsg发给FabApp4VS
+* [atcc](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/atcc)：照着教程魔改的100%能正常工作的链码，用于测试某些脚本能否正确部署这些自己开发的链码
 
-#### [genJSON](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/tools/genJSON)
-产生指定格式的json字符串用于测试，通过sendMsg发给FabApp4VS
 
-
-#### [atcc](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/atcc)
-照着教程魔改的100%能正常工作的链码，用于测试某些脚本能否正确部署这些自己开发的链码
-
-## For test: devMod & startTestNetwork
-* [How to start devMod](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/shells/devModOn)
-* [How to deploy your on test network](https://github.com/local-h0st/cross-domain-auth/blob/master/HyperledgerFabric/shells/testNetworkStart)
