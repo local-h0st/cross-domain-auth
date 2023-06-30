@@ -10,30 +10,23 @@ import (
 	"msgs"
 	"myrsa"
 	"net"
-	"os"
+	sharedconfigs "sharedConfigs"
 )
 
 // 应该要互斥锁，特别是写操作
 
 var domainInfo []msgs.DomainInfoRecord
-var serverPubkey map[string]string // serverid-, all kinds of server
-var PRVKEY, PUBKEY []byte
-var selfID string
-
-const selfAddr string = "localhost:55555"
-const servingPort string = ":55555"
+var serverPubkey map[string]string // serverid-pubkey, all kinds of server
+var PRVKEY, PUBKEY, vsPubkey []byte
 
 func main() {
 	fmt.Println("[sgxInteract main] running in enclave env.")
-	PRVKEY, PUBKEY = myrsa.GenRsaKey()
-	// TODO 为了方便调试暂时先指定了PRVKEY和PUBKEY
-	PUBKEY = []byte("-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCj8hW+keEOHHHLV/7BRO7I0j7a\nXAfxTvkiM8Qyex+aMQ7Ny+cavF4mWlJmdmGo9K3jHFH3LyEd2JuGPh5T0ad/O76C\nor+hX+RvgXkg0HS3MEQIwmzmNg57RSaNxzlJatXEfjpRJJ5Nc+dyA6hpYzaNj9LY\nKex5gvsGFpBMwQZyVwIDAQAB\n-----END PUBLIC KEY-----\n")
-	PRVKEY = []byte("-----BEGIN RSA PRIVATE KEY-----\nMIICXgIBAAKBgQCj8hW+keEOHHHLV/7BRO7I0j7aXAfxTvkiM8Qyex+aMQ7Ny+ca\nvF4mWlJmdmGo9K3jHFH3LyEd2JuGPh5T0ad/O76Cor+hX+RvgXkg0HS3MEQIwmzm\nNg57RSaNxzlJatXEfjpRJJ5Nc+dyA6hpYzaNj9LYKex5gvsGFpBMwQZyVwIDAQAB\nAoGBAKK4SZq/Qaf21X8lFIaRO4t5GcczJvL8Fkw7IxWTnNc2r+HU6slfgvcAGN73\nypCeYeSTnEsBrRXpgtun1gQNh/cqvnJU9uCpY/PVuk14vE+lYLhKkX/GAWfsmPs+\n2AUWJZeAVCJuixh9E9jnDSz+X8IWNC77cqZq8CIY/5M+nuCBAkEA1TaANVdqNBPL\n4phbC2dVFddCADWHNyaHbOrVy+bxD0x00CqyDupwvc6QMVbqpLydbbdJplZ3g6mk\nhy1HbpAJlwJBAMTYjTMSk/bLwA6D4SFGw1NyVLMOn9I6bnZzB8ryrbBdq6vbx0vV\nvGIsPNA6bKFTgUJb5DepWRMPisL02qS+dUECQQDSR0Uc1pC0uc18Nlycm5XLy5eZ\nUzF/D+3CWrzus16Ngw81+tXPZiI44E9PifQy8p6lBX6KoX6PiLDubJalkUMTAkBB\n55buwIuVl4YH1hOsBnsjFyZQhNbxleqh8cVsJ3ALmnD9qynAtCDMZa8+sDDqmoCu\nbQGtuR8/iHaW60/A1JuBAkEAgKuNrksiWi0h0KTFnassKgeaBUd2MociEK6hmKwI\nwi7kjPNHeaa1MqJMUQLhhYv33m5xuNFxIip2LTcXeJ+/5g==\n-----END RSA PRIVATE KEY-----\n")
-	// fmt.Println("[main] PUBKEY ==> ", string(bytes.Replace(PUBKEY, []byte("\n"), []byte("\\n"), -1)), "\n serving at", selfAddr)
-	selfID = os.Getenv("SERVERID")
+	PUBKEY = []byte(sharedconfigs.EnclavePubkey)
+	PRVKEY = []byte(sharedconfigs.EnclavePrvkey)
+	vsPubkey = []byte(sharedconfigs.ServerPubkey)
 	serverPubkey = make(map[string]string, 0)
 	// 监听
-	ln, err := net.Listen("tcp", servingPort)
+	ln, err := net.Listen("tcp", sharedconfigs.EnclavePort)
 	if err != nil {
 		panic(err)
 	}
@@ -59,15 +52,11 @@ func parseMessage(conn net.Conn) ([]byte, error) {
 	buf := make([]byte, 32768)
 	n, err := conn.Read(buf)
 	if err == io.EOF {
-		// conn.Close()
 		return nil, err
 	} else if err != nil {
-		// conn.Close()
 		return nil, err
 	}
 	msg := buf[:n]
-	// fmt.Println("[parseMessage] cipher received: ", msg)
-	fmt.Println("received one msg.")
 	return msg, nil
 }
 func handleMsg(cipher []byte) {
@@ -81,13 +70,10 @@ func handleMsg(cipher []byte) {
 		switch basic_msg.Method {
 		case "addServerPubkey":
 			if serverPubkey[basic_msg.SenderID] != "" {
-				fmt.Println("[handleMsg] pubkey already exists..")
+				fmt.Println("[handleMsg] server pubkey already exists..")
 			} else {
 				addServerPubkey(basic_msg.SenderID, basic_msg.Content)
 			}
-		case "needPubkey":
-			// needPubkey(basic_msg.Content)
-			fmt.Println("hello joker.")
 		default:
 			fmt.Println("[handleMsg] unknown method.")
 			return
@@ -152,8 +138,8 @@ func verifyID(SenderID string, jsonmsg []byte) {
 			pas_pubkey := serverPubkey[pas_id]
 			request_msg := msgs.BasicMsg{
 				Method:    "blacklistNeedUpdate",
-				SenderID:  selfID,
-				Content:   []byte(selfAddr),
+				SenderID:  sharedconfigs.NodeID,
+				Content:   []byte(sharedconfigs.EnclaveAddr),
 				Signature: nil,
 			}
 			request_msg.GenSign(PRVKEY)
@@ -168,7 +154,7 @@ func verifyID(SenderID string, jsonmsg []byte) {
 
 	verify_result := msgs.BasicMsg{
 		Method:    "verifyResult",
-		SenderID:  selfID,
+		SenderID:  sharedconfigs.NodeID,
 		Content:   nil,
 		Signature: nil,
 	}
@@ -214,8 +200,10 @@ func addServerPubkey(SenderID string, jsonmsg []byte) {
 		return
 	}
 	serverPubkey[SenderID] = string(msg.ServerPubkey)
-	fmt.Println(serverPubkey)
-	return
+	fmt.Println(serverPubkey) // TODO for test
+}
+func sendBackPubkey() {
+
 }
 func updateServerPubkey(SenderID string, jsonmsg []byte) {
 	fmt.Println("exec updateServerPubkey..")
@@ -233,36 +221,6 @@ func updateServerPubkey(SenderID string, jsonmsg []byte) {
 	return
 }
 
-/*
-func needPubkey(jsonmsg []byte) {
-	// 小丑函数，对方没我pubkey怎么给我发的加密消息，连decrypt都过不了
-	msg := msgs.NeedPubkey{}
-	if json.Unmarshal(jsonmsg, &msg) != nil {
-		fmt.Println("[needPubkey] msg json unmarshal failed.")
-		return
-	}
-	if serverPubkey[msg.SenderID] == "" {
-		serverPubkey[msg.SenderID] = string(msg.SenderPubkey)
-	}
-	// TODO，对方没有自己的公钥
-	add_key_msg := msgs.AddServerPubkeyMsg{
-		// ServerID:     selfID,
-		ServerPubkey: PUBKEY,
-	}
-	msg_to_send := msgs.BasicMsg{
-		Method:    "addServerPubkey",
-		SenderID:  selfID,
-		Content:   nil,
-		Signature: nil,
-	}
-	msg_to_send.Content, _ = json.Marshal(add_key_msg)
-	// add key 消息不需要签名，也不能
-	jsonmsg, _ = json.Marshal(msg_to_send)
-	if sendMsg(msg.SenderAddr, string(encryptMsg(jsonmsg, msg.SenderPubkey))) != nil {
-		fmt.Println("[needPubkey] pubkey send failed.")
-	}
-}
-*/
 // 辅助函数
 func sendMsg(addr string, data string) error {
 	// 连接到指定IP和端口

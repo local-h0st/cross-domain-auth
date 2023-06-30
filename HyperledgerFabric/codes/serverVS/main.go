@@ -11,6 +11,7 @@ import (
 	"net"
 	"os"
 	"path"
+	sharedconfigs "sharedConfigs"
 	"time"
 
 	"github.com/hyperledger/fabric-gateway/pkg/client"
@@ -32,44 +33,14 @@ const (
 	gatewayPeer  = "peer0.org1.example.com"
 )
 
-const (
-	db_path       = "./db"
-	serving_port  = ":54321"
-	selfAddr      = "localhost:54321"
-	enclaveAddr   = "localhost:55555"
-	enclavePubkey = "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCj8hW+keEOHHHLV/7BRO7I0j7a\nXAfxTvkiM8Qyex+aMQ7Ny+cavF4mWlJmdmGo9K3jHFH3LyEd2JuGPh5T0ad/O76C\nor+hX+RvgXkg0HS3MEQIwmzmNg57RSaNxzlJatXEfjpRJJ5Nc+dyA6hpYzaNj9LY\nKex5gvsGFpBMwQZyVwIDAQAB\n-----END PUBLIC KEY-----\n"
-)
-
-// var node_id string = os.Getenv("SERVERID")
-var node_id string = "serverVS001"
-var PRVKEY, PUBKEY []byte
-
-func sendAddServerPubkeyMsg() {
-	fmt.Println("[main] sendAddServerPubkeyMsg()")
-	basic_msg := msgs.BasicMsg{
-		Method:    "addServerPubkey",
-		SenderID:  node_id,
-		Content:   nil,
-		Signature: nil,
-	}
-	basic_msg.Content, _ = json.Marshal(msgs.AddServerPubkeyMsg{
-		ServerPubkey: PUBKEY,
-	})
-	data, _ := json.Marshal(basic_msg)
-	cipher := myrsa.EncryptMsg(data, []byte(enclavePubkey))
-	sendMsg(enclaveAddr, string(cipher))
-}
+var PRVKEY, PUBKEY, enPubkey []byte
 
 func main() {
-	PRVKEY, PUBKEY = myrsa.GenRsaKey()
-	fmt.Println("PUBKEY ==> ", string(bytes.Replace(PUBKEY, []byte("\n"), []byte("\\n"), -1)))
-
-	// 方便测试就直接指定了
-	PRVKEY = []byte("-----BEGIN RSA PRIVATE KEY-----\nMIICXQIBAAKBgQDQlXmFEiNzbO0iHjdYIUPvbWmqPmMJcrGVLjRUrr2HtURh9lcr\nGsti1r4BesFcuS+QAzBlFZsp50Ytae0snr26jnFLOpBGscCDLsyPrL3dlUnWGnQY\n5SOFjvVpAjsuc16W0TXXzdoaW6yZwX+tKd2yLkgbcL0alZeTI1v8lJN9YQIDAQAB\nAoGBAL7k/fk+l3lM6F3AP7CFiVI31Wu8exEricDZL4WNAuKPkA0D0dUeSaOkmvJp\nsUu2JARuFr18n6wjAMQRXMHoagQKt4zKB4Kcv6vNKNC+DLQVnd9WvujwDYChlty7\nOd+vuK5tXBIUi5FwF/QjHhOIj8EKhb228sxqXshEViuHO3dtAkEA4O6YM2cZp2Za\ngJODiRcXOjXoSkSVMqYfhARGiWRvJ0DuGAkksBAzTSxPeu0N6yEPv2Cddw2HCa1+\n24+Mqm6PPwJBAO1k0wYePhClgbTh/6sUCx5lyK+l+oTJ7H5heb0LthNX7n/B1xKv\nNr2JZtRRQ+QSRK+oTztVDSd87C0jRgITa18CQHdLU4F/nsV/rWQf2FUu3+zJhmdN\nNGvmWzSjJ93aXHFPKHeq8cBG905ov8aMTyNzJ2zyitEHZaUmVO+RlKMXe/UCQQCR\nSUxxCR849uHr/wiG/kxTvT1WaoFotV/cdPGZhkpXilA3tj1XfQ5Gb4oUVOv08E1D\nKAHdsQ7M5QJyGY1mBdaHAkAf5Y1dfFOOTQqZNkSWgm0lFfX1tfUPMD1/XnfXBgxr\n4VvDGz66MsAvh1v4qYw8GcKoGxetTWS8yzIYiBMgqD5l\n-----END RSA PRIVATE KEY-----\n")
-	PUBKEY = []byte("-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDQlXmFEiNzbO0iHjdYIUPvbWmq\nPmMJcrGVLjRUrr2HtURh9lcrGsti1r4BesFcuS+QAzBlFZsp50Ytae0snr26jnFL\nOpBGscCDLsyPrL3dlUnWGnQY5SOFjvVpAjsuc16W0TXXzdoaW6yZwX+tKd2yLkgb\ncL0alZeTI1v8lJN9YQIDAQAB\n-----END PUBLIC KEY-----\n")
-	sendAddServerPubkeyMsg()
+	PRVKEY = []byte(sharedconfigs.ServerPrvkey)
+	PUBKEY = []byte(sharedconfigs.ServerPubkey)
+	enPubkey = []byte(sharedconfigs.EnclavePubkey)
 	// 初始化leveldb
-	db, err := leveldb.OpenFile(db_path, nil)
+	db, err := leveldb.OpenFile(sharedconfigs.DatabasePath, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -110,8 +81,10 @@ func main() {
 	contract := network.GetContract(chaincodeName)
 	initLedger(contract)
 
-	fmt.Println("[main] listening on", serving_port)
-	ln, err := net.Listen("tcp", serving_port)
+	// sendAddServerPubkeyMsg()
+
+	fmt.Println("[main] listening on", sharedconfigs.ServerPort)
+	ln, err := net.Listen("tcp", sharedconfigs.ServerPort)
 	if err != nil {
 		panic(err)
 	}
@@ -122,6 +95,7 @@ func main() {
 		}
 		go handleConn(conn, contract, db)
 	}
+
 }
 
 func handleConn(conn net.Conn, contract *client.Contract, db *leveldb.DB) {
@@ -179,6 +153,22 @@ func handleMsg(cipher []byte, contract *client.Contract, db *leveldb.DB) {
 
 }
 
+func sendAddServerPubkeyMsg() {
+	fmt.Println("[main] sendAddServerPubkeyMsg()")
+	basic_msg := msgs.BasicMsg{
+		Method:    "addServerPubkey",
+		SenderID:  sharedconfigs.NodeID,
+		Content:   nil,
+		Signature: nil,
+	}
+	basic_msg.Content, _ = json.Marshal(msgs.AddServerPubkeyMsg{
+		ServerPubkey: PUBKEY,
+	})
+	data, _ := json.Marshal(basic_msg)
+	cipher := myrsa.EncryptMsg(data, []byte(sharedconfigs.EnclavePubkey))
+	sendMsg(sharedconfigs.EnclaveAddr, string(cipher))
+}
+
 func fragment(jsonmsg []byte, contract *client.Contract, db *leveldb.DB) {
 	fmt.Println("[fragment] exec...")
 	fragment_msg := msgs.FragmentMsg{}
@@ -196,10 +186,10 @@ func fragment(jsonmsg []byte, contract *client.Contract, db *leveldb.DB) {
 		fmt.Printf("[fragment] put record to db failed.")
 		return
 	}
-	if fragment_msg.Tag == node_id {
+	if fragment_msg.Tag == sharedconfigs.NodeID {
 		basic_msg := msgs.BasicMsg{
 			Method:    "verifyID",
-			SenderID:  node_id,
+			SenderID:  sharedconfigs.NodeID,
 			Content:   nil,
 			Signature: nil,
 		}
@@ -208,14 +198,14 @@ func fragment(jsonmsg []byte, contract *client.Contract, db *leveldb.DB) {
 			PubkeyDeviceToDomain: fragment_msg.PubkeyDeviceToDomain,
 			CipherID:             fragment_msg.CipherID,
 			Domain:               fragment_msg.Domain,
-			SenderAddr:           selfAddr,
+			SenderAddr:           sharedconfigs.ServerAddr,
 			UpdateFlag:           false,
 			DomainPasAddr:        "",
 		})
 		basic_msg.GenSign(PRVKEY)
 		data, _ := json.Marshal(basic_msg)
-		cipher := myrsa.EncryptMsg(data, []byte(enclavePubkey))
-		sendMsg(enclaveAddr, string(cipher))
+		cipher := myrsa.EncryptMsg(data, []byte(sharedconfigs.EnclavePubkey))
+		sendMsg(sharedconfigs.EnclaveAddr, string(cipher))
 	}
 }
 func addPseudoRecordToLedger(contract *client.Contract, pid, valid, pubkey_device_to_domain string) error {
@@ -268,7 +258,7 @@ func sendMsg(addr string, data string) {
 	}
 }
 
-/*----------- 直接抄application-gateway-go -----------*/
+/*----------- 直接参考application-gateway-go -----------*/
 func initLedger(contract *client.Contract) {
 	fmt.Printf("[InitLedger] func called.\n")
 
