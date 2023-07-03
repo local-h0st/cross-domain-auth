@@ -35,3 +35,9 @@ addPseudoRecordToLedger不执行啊
 
 发现true id解码不对，会不会是`[]byte`外面再套一个`[]byte`的原因？
 破案了，不知道脑子怎么想的在serverVS里面又对CipherID加密了一回，，无语
+
+///////////
+nice EGo 能用！
+之前的genPayloadForServer VS移到tools里面去了
+打算写个pas，再写个admin
+先push了再说

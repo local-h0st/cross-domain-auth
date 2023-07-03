@@ -85,7 +85,7 @@ func main() {
 	}
 	testmsg.GenSign(PRVKEY)
 	teststr, _ := json.Marshal(testmsg)
-	sendMsg(sharedconfigs.EnclaveAddr, string(teststr))
+	sendMsg(sharedconfigs.EnclaveAddr, string(myrsa.EncryptMsg(teststr, enPubkey)))
 	//
 
 	fmt.Println("[main] listening on", sharedconfigs.ServerPort)
