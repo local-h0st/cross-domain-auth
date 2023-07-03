@@ -5,6 +5,13 @@ import (
 	"myrsa"
 )
 
+// TODO 用于VS上账本公布自己的信息
+type ServerRecord struct {
+	NodeID       string
+	ServerAddr   string
+	ServerPubkey string
+}
+
 type BasicMsg struct {
 	Method    string
 	SenderID  string
@@ -26,18 +33,9 @@ func (m BasicMsg) VerifySign(pubkey []byte) bool {
 }
 
 type VerifyMsg struct {
+	DestDomain string
+	PID        string
 	CipherID   []byte
-	Domain     string
-	SenderAddr string
-	// 回消息用
-	PID                  string
-	PubkeyDeviceToDomain []byte
-	// 同步blacklist用
-	UpdateFlag    bool
-	DomainPasAddr string // ip:port形式，例如localhost:6666
-	// DomainPasID   string // 多余了，能根据Domain查出来
-	// ServerID      string // 来自哪个server
-	// ServerAddr    string
 }
 
 type AddServerPubkeyMsg struct {
@@ -53,45 +51,32 @@ type UpdateServerPubkeyMsg struct {
 }
 
 type VerifyResultMsg struct {
-	PID                  string
-	Result               string
-	PubkeyDeviceToDomain []byte
+	PID        string
+	DestDomain string
+	Result     string
 }
 
-// func (m *UpdateServerPubkeyMsg) GenSign(prvkey []byte) {
-// 	m.Signature = nil
-// 	jsonbyte, _ := json.Marshal(m)
-// 	m.Signature = myrsa.SignMsg((jsonbyte), prvkey)
-// }
-
-// func (m UpdateServerPubkeyMsg) VerifySign(pubkey []byte) bool {
-// 	sign_given := m.Signature
-// 	m.Signature = nil
-// 	jsonbyte, _ := json.Marshal(m)
-// 	return myrsa.VerifyMsgSig(jsonbyte, sign_given, pubkey)
-// }
-/*
-type NeedPubkey struct {
-	// 小丑结构
-	SenderID     string
-	SenderPubkey []byte
-	SenderAddr   string
-}
-*/
-type DomainInfoRecord struct {
+type DomainRecord struct {
 	Domain    string
 	PasID     string
+	PasAddr   string
+	PasPubkey []byte
+	WaitQ     []FragmentMsg // 存储正在核验但是没有写入账本的Fragment记录
+}
+
+type BlacklistRecord struct {
+	Domain    string
 	BlackList []string
 }
 
-// 结构内可以加入随机数防止截获密文重放攻击
-
 // For serverVS
 type FragmentMsg struct {
-	Tag                  string // node_id
-	PID                  string
-	Domain               string
-	Point                []byte // 门限签名技术的那个点，我也不知道用什么格式存储
-	CipherID             []byte
-	PubkeyDeviceToDomain []byte
+	Tag              string // node_id
+	PID              string
+	OrigDomain       string
+	DestDomain       string
+	CipherID         []byte
+	PubkeyDev2Domain []byte
+	Point            []byte // 门限签名技术的那个点，我也不知道用什么格式存储，此信息不应该写入账本
+
 }

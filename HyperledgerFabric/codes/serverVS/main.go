@@ -34,6 +34,7 @@ const (
 )
 
 var PRVKEY, PUBKEY, enPubkey []byte
+var domains []msgs.DomainRecord
 
 func main() {
 	PRVKEY = []byte(sharedconfigs.ServerPrvkey)
@@ -46,7 +47,6 @@ func main() {
 	}
 	defer db.Close()
 	// 连接gateway，照抄application-gateway-go
-	fmt.Println("[main] connecting to gateway...")
 	clientConnection := newGrpcConnection()
 	defer clientConnection.Close()
 	id := newIdentity()
@@ -71,17 +71,22 @@ func main() {
 	if ccname := os.Getenv("CHAINCODE_NAME"); ccname != "" {
 		chaincodeName = ccname
 	}
-
 	channelName := "mychannel"
 	if cname := os.Getenv("CHANNEL_NAME"); cname != "" {
 		channelName = cname
 	}
-
 	network := gw.GetNetwork(channelName)
 	contract := network.GetContract(chaincodeName)
 	initLedger(contract)
 
-	// sendAddServerPubkeyMsg()
+	// TODO for test
+	testmsg := msgs.BasicMsg{
+		Method: "testingConnection",
+	}
+	testmsg.GenSign(PRVKEY)
+	teststr, _ := json.Marshal(testmsg)
+	sendMsg(sharedconfigs.EnclaveAddr, string(teststr))
+	//
 
 	fmt.Println("[main] listening on", sharedconfigs.ServerPort)
 	ln, err := net.Listen("tcp", sharedconfigs.ServerPort)
@@ -95,7 +100,6 @@ func main() {
 		}
 		go handleConn(conn, contract, db)
 	}
-
 }
 
 func handleConn(conn net.Conn, contract *client.Contract, db *leveldb.DB) {
@@ -127,50 +131,102 @@ func handleMsg(cipher []byte, contract *client.Contract, db *leveldb.DB) {
 		fmt.Println("[handleMsg] basic msg json unmarshal failed:", string(jsonstr))
 		return
 	}
-	// TODO 前3个case没有核验签名，需要确认确实是PAS发过来的，PAS初始pubkey信息可以由管理员配置，所以一定可信。可以写个程序一键配置serverVS、sgxInteract等等的初始pubkey
+	// TODO 有几个case没有核验签名，需要确认确实是PAS发过来的，PAS初始pubkey信息可以由管理员配置，所以一定可信。可以写个程序一键配置serverVS、sgxInteract等等的初始pubkey
 	switch basic_msg.Method {
-	case "fragment":
-		fragment(basic_msg.Content, contract, db)
-	case "verifyResult":
-		result_msg := msgs.VerifyResultMsg{}
-		if json.Unmarshal(basic_msg.Content, &result_msg) != nil {
-			fmt.Println("verifyResult json unmarshal failed.")
+	// admin sig
+	case "syncDomain":
+		// TODO sender should be admin, not verified SenderID yet.
+		if !basic_msg.VerifySign([]byte(sharedconfigs.AdminPubkey)) {
+			fmt.Println("syncDomain: admin sig invalid, reject.")
 			return
 		}
-		addPseudoRecordToLedger(contract, result_msg.PID, result_msg.Result, string(result_msg.PubkeyDeviceToDomain))
-	case "queryLedger":
-		queryLedger(contract)
+		syncDomain(basic_msg.Content)
 	case "getFragment":
-		// 需要核验管理员admin的签名是否正确
+		if !basic_msg.VerifySign([]byte(sharedconfigs.AdminPubkey)) {
+			fmt.Println("getFragment: admin sig invalid, reject.")
+			return
+		}
 		data, err := db.Get(basic_msg.Content, nil)
 		if err != nil {
-			fmt.Println("level db get fragment failed.")
+			fmt.Println("getFragment: level db get fragment failed.")
 		}
 		fmt.Println("fragment ==> ", string(data))
+	// pas sig
+	case "fragment":
+		var domain_pubkey []byte
+		for _, domain := range domains {
+			if basic_msg.SenderID == domain.PasID {
+				domain_pubkey = domain.PasPubkey
+				break
+			}
+		}
+		if domain_pubkey == nil {
+			fmt.Println("fragment: failed to find PAS pubkey, may lack of domain info.")
+			return
+		} else {
+			if !basic_msg.VerifySign(domain_pubkey) {
+				fmt.Println("fragmet: pas sig invalid, reject.")
+				return
+			}
+		}
+		fragment(basic_msg.Content, contract, db)
+	// enclave sig
+	case "verifyResult":
+		if !basic_msg.VerifySign([]byte(sharedconfigs.EnclavePubkey)) {
+			fmt.Println("verifyResult: enclave sig invalid, reject.")
+			return
+		}
+		result_msg := msgs.VerifyResultMsg{}
+		if json.Unmarshal(basic_msg.Content, &result_msg) != nil {
+			fmt.Println("verifyResult: json unmarshal failed.")
+			return
+		}
+		d_ind, q_ind := -1, -1
+		for k := range domains {
+			if domains[k].Domain == result_msg.DestDomain {
+				for j := range domains[k].WaitQ {
+					if domains[k].WaitQ[j].PID == result_msg.PID {
+						d_ind = k
+						q_ind = j
+						break
+					}
+				}
+				break
+			}
+		}
+		if addPseudoRecordToLedger(contract, result_msg.Result, domains[d_ind].WaitQ[q_ind]) != nil {
+			fmt.Println("verifyResult: failed to put result to ledger, ")
+		}
+		domains[d_ind].WaitQ[q_ind] = msgs.FragmentMsg{} // 清除记录
+	// no sig required
+	case "queryLedger":
+		queryLedger(contract)
 	default:
+		fmt.Println(basic_msg.Method, ": unknown method.")
 		return
 	}
-
 }
 
-func sendAddServerPubkeyMsg() {
-	fmt.Println("[main] sendAddServerPubkeyMsg()")
-	basic_msg := msgs.BasicMsg{
-		Method:    "addServerPubkey",
-		SenderID:  sharedconfigs.NodeID,
-		Content:   nil,
-		Signature: nil,
+func syncDomain(jsonmsg []byte) {
+	sync_msg := msgs.DomainRecord{}
+	if json.Unmarshal(jsonmsg, &sync_msg) != nil {
+		fmt.Println("syncDomain: json unmarshal failed.")
+		return
 	}
-	basic_msg.Content, _ = json.Marshal(msgs.AddServerPubkeyMsg{
-		ServerPubkey: PUBKEY,
-	})
-	data, _ := json.Marshal(basic_msg)
-	cipher := myrsa.EncryptMsg(data, []byte(sharedconfigs.EnclavePubkey))
-	sendMsg(sharedconfigs.EnclaveAddr, string(cipher))
+	index := -1
+	for k := range domains {
+		if domains[k].Domain == sync_msg.Domain {
+			index = k
+			break
+		}
+	}
+	if index == -1 {
+		domains = append(domains, sync_msg)
+	} else {
+		domains[index] = sync_msg
+	}
 }
-
 func fragment(jsonmsg []byte, contract *client.Contract, db *leveldb.DB) {
-	fmt.Println("[fragment] exec...")
 	fragment_msg := msgs.FragmentMsg{}
 	if json.Unmarshal(jsonmsg, &fragment_msg) != nil {
 		fmt.Println("[fragment] json unmarshal failed.")
@@ -194,26 +250,46 @@ func fragment(jsonmsg []byte, contract *client.Contract, db *leveldb.DB) {
 			Signature: nil,
 		}
 		basic_msg.Content, _ = json.Marshal(msgs.VerifyMsg{
-			PID:                  fragment_msg.PID,
-			PubkeyDeviceToDomain: fragment_msg.PubkeyDeviceToDomain,
-			CipherID:             fragment_msg.CipherID,
-			Domain:               fragment_msg.Domain,
-			SenderAddr:           sharedconfigs.ServerAddr,
-			UpdateFlag:           false,
-			DomainPasAddr:        "",
+			PID:        fragment_msg.PID,
+			CipherID:   fragment_msg.CipherID,
+			DestDomain: fragment_msg.DestDomain,
 		})
 		basic_msg.GenSign(PRVKEY)
 		data, _ := json.Marshal(basic_msg)
 		cipher := myrsa.EncryptMsg(data, []byte(sharedconfigs.EnclavePubkey))
 		sendMsg(sharedconfigs.EnclaveAddr, string(cipher))
+		for k := range domains {
+			if domains[k].Domain == fragment_msg.DestDomain {
+				domains[k].WaitQ = append(domains[k].WaitQ, fragment_msg)
+				break
+			}
+		}
 	}
 }
-func addPseudoRecordToLedger(contract *client.Contract, pid, valid, pubkey_device_to_domain string) error {
-	_, err := contract.SubmitTransaction("AddPseudoRecord", pid, valid, pubkey_device_to_domain)
+func addPseudoRecordToLedger(contract *client.Contract, valid string, rec msgs.FragmentMsg) error {
+	var pseudo_record struct {
+		PID              string
+		OrigDomain       string
+		DestDomain       string
+		PubkeyDev2Domain string
+		Valid            string
+		Tag              string
+		Timestamp        string
+	} // 需要和demo的数据结构手工同步
+	pseudo_record.PID = rec.PID
+	pseudo_record.OrigDomain = rec.OrigDomain
+	pseudo_record.DestDomain = rec.DestDomain
+	pseudo_record.PubkeyDev2Domain = string(rec.PubkeyDev2Domain)
+	pseudo_record.Valid = valid
+	pseudo_record.Tag = rec.Tag
+	pseudo_record.Timestamp = ""
+
+	jsonstr, _ := json.Marshal(pseudo_record)
+
+	_, err := contract.SubmitTransaction("AddPseudoRecord", string(jsonstr))
 	if err != nil {
 		return err
 	}
-	// fmt.Println("[addPseudoRecordToLedger] result ==>", evaluateResult)
 	return nil
 }
 func queryLedger(contract *client.Contract) {
@@ -340,3 +416,19 @@ func formatJSON(data []byte) string {
 	}
 	return prettyJSON.String()
 }
+
+// func sendAddServerPubkeyMsg() {
+// 	fmt.Println("[main] sendAddServerPubkeyMsg()")
+// 	basic_msg := msgs.BasicMsg{
+// 		Method:    "addServerPubkey",
+// 		SenderID:  sharedconfigs.NodeID,
+// 		Content:   nil,
+// 		Signature: nil,
+// 	}
+// 	basic_msg.Content, _ = json.Marshal(msgs.AddServerPubkeyMsg{
+// 		ServerPubkey: PUBKEY,
+// 	})
+// 	data, _ := json.Marshal(basic_msg)
+// 	cipher := myrsa.EncryptMsg(data, []byte(sharedconfigs.EnclavePubkey))
+// 	sendMsg(sharedconfigs.EnclaveAddr, string(cipher))
+// }
