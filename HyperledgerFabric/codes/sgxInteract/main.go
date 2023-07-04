@@ -54,7 +54,7 @@ func parseMessage(conn net.Conn) ([]byte, error) {
 }
 func handleMsg(cipher []byte) {
 	basic_msg := msgs.BasicMsg{}
-	if json.Unmarshal(myrsa.DecryptMsg(cipher, PRVKEY), &basic_msg) != nil {
+	if json.Unmarshal(myrsa.DecryptMsg(cipher, []byte(sharedconfigs.EnclavePrvkey)), &basic_msg) != nil {
 		fmt.Println("[handleMsg] basic msg json unmarshal failed.")
 		return
 	}
@@ -68,8 +68,16 @@ func handleMsg(cipher []byte) {
 	case "updateBlacklist": // TODO 要改
 		updateBlacklist(basic_msg.Content)
 		fmt.Println("up-to-date blacklists:", blacklists)
+	case "testingConnection":
+		testmsg := msgs.BasicMsg{
+			Method:   "testingConnection",
+			SenderID: sharedconfigs.NodeEnclaveID,
+		}
+		testmsg.GenSign(PRVKEY)
+		teststr, _ := json.Marshal(testmsg)
+		sendMsg(sharedconfigs.ServerAddr, string(myrsa.EncryptMsg(teststr, vsPubkey)))
 	default:
-		fmt.Println("[handleMsg] unknown method.")
+		fmt.Println(basic_msg.Method, ": unknown method.")
 		return
 	}
 }

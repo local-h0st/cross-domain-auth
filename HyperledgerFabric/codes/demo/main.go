@@ -13,7 +13,6 @@ type SmartContract struct {
 	contractapi.Contract
 }
 
-
 type PseudoRecord struct {
 	// 直接拿PID当成索引
 	PID              string
@@ -43,6 +42,15 @@ func (s *SmartContract) CheckExistance(ctx contractapi.TransactionContextInterfa
 		// pid不存在
 		return false, nil
 	}
+}
+func (s *SmartContract) QueryOne(ctx contractapi.TransactionContextInterface, pid string) (PseudoRecord, error) {
+	assetJSON, err := ctx.GetStub().GetState(pid)
+	rec := PseudoRecord{}
+	if err != nil {
+		return rec, err
+	}
+	err = json.Unmarshal(assetJSON, &rec)
+	return rec, err
 }
 func (s *SmartContract) AddPseudoRecord(ctx contractapi.TransactionContextInterface, jsonstr string) error {
 	pseudo_record := PseudoRecord{}

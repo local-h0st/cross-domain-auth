@@ -7,10 +7,13 @@ import (
 
 // TODO 用于VS上账本公布自己的信息
 type ServerRecord struct {
-	NodeID       string
-	ServerAddr   string
-	ServerPubkey string
+	NodeID        string
+	ServerAddr    string
+	ServerPubkey  string
+	EnclavePubkey string
 }
+
+//
 
 type BasicMsg struct {
 	Method    string
@@ -57,16 +60,22 @@ type VerifyResultMsg struct {
 }
 
 type DomainRecord struct {
-	Domain    string
-	PasID     string
-	PasAddr   string
-	PasPubkey []byte
-	WaitQ     []FragmentMsg // 存储正在核验但是没有写入账本的Fragment记录
+	Domain                       string
+	PasID                        string
+	PasAddr                      string
+	PasPubkey                    []byte
+	BlacklistLastUpdateTimestamp string
+	WaitQ                        []FragmentMsg // 存储正在核验但是没有写入账本的Fragment记录
 }
 
 type BlacklistRecord struct {
 	Domain    string
 	BlackList []string
+}
+
+type UpdateBlacklistTimestampMsg struct {
+	Domain    string
+	Timestamp string
 }
 
 // For serverVS

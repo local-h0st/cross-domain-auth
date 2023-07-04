@@ -10,10 +10,10 @@ const (
 	ServerAddr  = "localhost:54321"
 	ServerPort  = ":54321"
 
-	EnclavePubkey = "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCj8hW+keEOHHHLV/7BRO7I0j7a\nXAfxTvkiM8Qyex+aMQ7Ny+cavF4mWlJmdmGo9K3jHFH3LyEd2JuGPh5T0ad/O76C\nor+hX+RvgXkg0HS3MEQIwmzmNg57RSaNxzlJatXEfjpRJJ5Nc+dyA6hpYzaNj9LY\nKex5gvsGFpBMwQZyVwIDAQAB\n-----END PUBLIC KEY-----\n"
-	EnclavePrvkey = "-----BEGIN RSA PRIVATE KEY-----\nMIICXgIBAAKBgQCj8hW+keEOHHHLV/7BRO7I0j7aXAfxTvkiM8Qyex+aMQ7Ny+ca\nvF4mWlJmdmGo9K3jHFH3LyEd2JuGPh5T0ad/O76Cor+hX+RvgXkg0HS3MEQIwmzm\nNg57RSaNxzlJatXEfjpRJJ5Nc+dyA6hpYzaNj9LYKex5gvsGFpBMwQZyVwIDAQAB\nAoGBAKK4SZq/Qaf21X8lFIaRO4t5GcczJvL8Fkw7IxWTnNc2r+HU6slfgvcAGN73\nypCeYeSTnEsBrRXpgtun1gQNh/cqvnJU9uCpY/PVuk14vE+lYLhKkX/GAWfsmPs+\n2AUWJZeAVCJuixh9E9jnDSz+X8IWNC77cqZq8CIY/5M+nuCBAkEA1TaANVdqNBPL\n4phbC2dVFddCADWHNyaHbOrVy+bxD0x00CqyDupwvc6QMVbqpLydbbdJplZ3g6mk\nhy1HbpAJlwJBAMTYjTMSk/bLwA6D4SFGw1NyVLMOn9I6bnZzB8ryrbBdq6vbx0vV\nvGIsPNA6bKFTgUJb5DepWRMPisL02qS+dUECQQDSR0Uc1pC0uc18Nlycm5XLy5eZ\nUzF/D+3CWrzus16Ngw81+tXPZiI44E9PifQy8p6lBX6KoX6PiLDubJalkUMTAkBB\n55buwIuVl4YH1hOsBnsjFyZQhNbxleqh8cVsJ3ALmnD9qynAtCDMZa8+sDDqmoCu\nbQGtuR8/iHaW60/A1JuBAkEAgKuNrksiWi0h0KTFnassKgeaBUd2MociEK6hmKwI\nwi7kjPNHeaa1MqJMUQLhhYv33m5xuNFxIip2LTcXeJ+/5g==\n-----END RSA PRIVATE KEY-----\n"
-	ServerPubkey  = "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDQlXmFEiNzbO0iHjdYIUPvbWmq\nPmMJcrGVLjRUrr2HtURh9lcrGsti1r4BesFcuS+QAzBlFZsp50Ytae0snr26jnFL\nOpBGscCDLsyPrL3dlUnWGnQY5SOFjvVpAjsuc16W0TXXzdoaW6yZwX+tKd2yLkgb\ncL0alZeTI1v8lJN9YQIDAQAB\n-----END PUBLIC KEY-----\n"
-	ServerPrvkey  = "-----BEGIN RSA PRIVATE KEY-----\nMIICXQIBAAKBgQDQlXmFEiNzbO0iHjdYIUPvbWmqPmMJcrGVLjRUrr2HtURh9lcr\nGsti1r4BesFcuS+QAzBlFZsp50Ytae0snr26jnFLOpBGscCDLsyPrL3dlUnWGnQY\n5SOFjvVpAjsuc16W0TXXzdoaW6yZwX+tKd2yLkgbcL0alZeTI1v8lJN9YQIDAQAB\nAoGBAL7k/fk+l3lM6F3AP7CFiVI31Wu8exEricDZL4WNAuKPkA0D0dUeSaOkmvJp\nsUu2JARuFr18n6wjAMQRXMHoagQKt4zKB4Kcv6vNKNC+DLQVnd9WvujwDYChlty7\nOd+vuK5tXBIUi5FwF/QjHhOIj8EKhb228sxqXshEViuHO3dtAkEA4O6YM2cZp2Za\ngJODiRcXOjXoSkSVMqYfhARGiWRvJ0DuGAkksBAzTSxPeu0N6yEPv2Cddw2HCa1+\n24+Mqm6PPwJBAO1k0wYePhClgbTh/6sUCx5lyK+l+oTJ7H5heb0LthNX7n/B1xKv\nNr2JZtRRQ+QSRK+oTztVDSd87C0jRgITa18CQHdLU4F/nsV/rWQf2FUu3+zJhmdN\nNGvmWzSjJ93aXHFPKHeq8cBG905ov8aMTyNzJ2zyitEHZaUmVO+RlKMXe/UCQQCR\nSUxxCR849uHr/wiG/kxTvT1WaoFotV/cdPGZhkpXilA3tj1XfQ5Gb4oUVOv08E1D\nKAHdsQ7M5QJyGY1mBdaHAkAf5Y1dfFOOTQqZNkSWgm0lFfX1tfUPMD1/XnfXBgxr\n4VvDGz66MsAvh1v4qYw8GcKoGxetTWS8yzIYiBMgqD5l\n-----END RSA PRIVATE KEY-----\n"
+	EnclavePubkey = "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCTRELjLgbesbJ/ge8qbgb8/m6u\nz5D9MhOUawKwuZFmkruvJKF8xtH0SAHao4Rxni62j2/fZ7Wjvcn9pzRQmMgreVNA\nj2FP67tgSUEGTDEd79J6Cu9mbBDf3u3NMURpR14dKekwx2pRpJuvXtIZdJyIdAnz\nk6moUmNt7TXRbqnmPQIDAQAB\n-----END PUBLIC KEY-----\n"
+	EnclavePrvkey = "-----BEGIN RSA PRIVATE KEY-----\nMIICXgIBAAKBgQCTRELjLgbesbJ/ge8qbgb8/m6uz5D9MhOUawKwuZFmkruvJKF8\nxtH0SAHao4Rxni62j2/fZ7Wjvcn9pzRQmMgreVNAj2FP67tgSUEGTDEd79J6Cu9m\nbBDf3u3NMURpR14dKekwx2pRpJuvXtIZdJyIdAnzk6moUmNt7TXRbqnmPQIDAQAB\nAoGAXVGfNQiAj/N4kfYLUQ7B3OV5y8p6LQfjgmRBIy2kJqSKzBRhRIlUmABdNGfz\n0G+VWFgSYzX70xO8AMFIlF4MURIMar8+kCazAMBVDtIj2JTRJU3CUos+DnqaraEn\ngh/KvhutMEr+gnTTWxHcEHBouQ1063tPOcjuMliOCmTmmoECQQDEGnd4Pp2DAj0C\n1+318oMcS58oRmedw3Fwp89/7lQoOB/lrXg9UFmnWSr3/k5KpD28FjFs9vwznkrj\nX5YiGRVhAkEAwD8ynTVnQGHzzq5jRQxK/l7te98ilidZgTvpKpnQmlaCedY39K8/\nl68+tLzo3fsRtAaQ9toXx6fEo4r+8B5iXQJBAL/vZ585KdFgD3cJAM8IXWsEWPKC\ndkfjUtSAaoc8LQJwbEfQUS8xxY4VqAixzs8fkYzV6+pKku2ysHl6xOb6xgECQQCm\nqiNHBzUsK78iPyzwf2fEfqeD7D4fzp1Z3IaX2CFwq+8RkRWRmxyWc+b46Y04ZKFE\nYSzr1Mco39kprya1JKJBAkEAi+MERerr2Zj7zDOuPcLXmlCxPXIoFHz++mg5CUgQ\nJC5uwnZmhpNoDASTlaxUp5gni4iSw3bTZ+cHuVYCVxek2Q==\n-----END RSA PRIVATE KEY-----\n"
+	ServerPubkey  = "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCU+Q+LZjRCJyWxFMpUeTmdHvzl\nRyNCAsaWxUFI1W9mXywxcItmLmGLEG/tYVzYkjdgjqldvYZfi6q7JNdIYaM7EmXr\n5sgDWbfrH6eeXPe+dTu5dGTSvZ2K3Kvlo17kDKp/H4LcDcG3YpvAPQp/nII9ReWI\n56iq8mohZxb1eMgxPwIDAQAB\n-----END PUBLIC KEY-----\n"
+	ServerPrvkey  = "-----BEGIN RSA PRIVATE KEY-----\nMIICXgIBAAKBgQCU+Q+LZjRCJyWxFMpUeTmdHvzlRyNCAsaWxUFI1W9mXywxcItm\nLmGLEG/tYVzYkjdgjqldvYZfi6q7JNdIYaM7EmXr5sgDWbfrH6eeXPe+dTu5dGTS\nvZ2K3Kvlo17kDKp/H4LcDcG3YpvAPQp/nII9ReWI56iq8mohZxb1eMgxPwIDAQAB\nAoGACwifZB2/xR6NJh56FeOcpsyCwqCQNfVqrAQUH8bfJ1/pMAg76ueIhfpDr/tE\nGy5JN7eZR74f07fOf2ntIAlLQ5ndS3FkGHdjy0tqiMHNATouyYRLA2K2AKyWHxaT\n9IElqzl19EEUKwdDrJCKB3LHh6ET4FerS6TQX7nuXOaAoHECQQDBjGD2HgLoL3L4\npLrdmQykma3hxxQF85OhP0CH1eZp4kECNs1enL3sC1z0e2inmLa/m/CtyV02BeVq\nDizS43iVAkEAxQqgogAUuQjobL4bR19g9GPT7YMTU7N9yybVl2tLNgXtyNnWaKlY\notQdccUzmsfbFmY11lF4IhLGd7PvGkNJgwJBAIIlBr34CDRgU4rmGdEQLPQxcj6z\nQr+NveNbSOUN69WfEd+PQiEwfHTQXzz2DrVDdv74uKnjEQ5WgKEDzxgvZNECQQCK\nwx42mAn/+Qb9ta+uRrwXv8m6pSlSM8Bt9c5LkVLpG6nGXaqCEGiMWwbVXUQnR4HB\nt39IjB0nGcPM/tluzF4TAkEAu6C99Q2Y1Skl2J39kjAUA+8iosVBlipWphOMRObe\n9RkQRfLI63B5DHorM2Z0YukdWfVf4FJSNGy05KZIuvqxpw==\n-----END RSA PRIVATE KEY-----\n"
 	AdminPubkey   = "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDVDTjZaYpCk5R8RNcq86rfrbxn\n6pss6d+MlodAu/UdgfstJzQK6X9gqWceCyAmm30CHdRZbC9E39E2U13uF9NX2oTc\npdC0XLRAW+rskd/jCGB0zQSfe4ktzKu0a5Cp1pwLWyZtCU7re6A2bhVeOh9JUNAD\nFBiemhYl3JIfetAVDwIDAQAB\n-----END PUBLIC KEY-----\n"
 )
 
@@ -37,4 +37,25 @@ const (
 
 // 结构内可以加入随机数防止截获密文重放攻击
 
-// serverVS处理黑名单
+// serverVS要检测黑名单的update时间
+// server的信息要上链
+// 这两个直接原账本特殊pid不给用，json就完了
+// 索引是domainname的，valid代表黑名单update-time
+
+// initLedger单独放一个程序就行了，这样就不用每次重启整个区块链系统了
+
+/*
+QueryOne: query ledger failed.
+
+testttttttttttttttttttttttttttttt: {
+  "PID": "domainCali",
+  "OrigDomain": "",
+  "DestDomain": "",
+  "PubkeyDev2Domain": "",
+  "Valid": "testinggggggggggg",
+  "Tag": "",
+  "Timestamp": "2023-07-04 07:21:23"
+}
+*/
+
+// serverVS的信息也复用Valid字段了，不过是个json
