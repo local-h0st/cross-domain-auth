@@ -213,6 +213,7 @@ func handleMsg(cipher []byte, contract *client.Contract, db *leveldb.DB) {
 			// server收到后转发给enclave，然后将本地的时间戳设置和账本一样
 			// 最好重新调用fragment函数
 		} else {
+			// 这里逻辑不对，如果不是tag node就不需要验证本地黑名单记录，这里需要修改
 			fragment(basic_msg.Content, contract, db)
 		}
 

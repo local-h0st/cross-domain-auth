@@ -1,4 +1,24 @@
-# 究极测试开始
+## 流程
+
+1. 部署链码
+2. 启动enclave
+3. 启动serverVS
+4. admin向serverVS发送所有domain信息
+5. 源域pas向所有serverVS分别发送fragment，所有serverVS收到后先存储fragment
+6. tag serverVS如果没有目标域黑名单信息或者已经过期，则会触发黑名单同步，继续；如果黑名单无需更新，跳转10
+7. serverVS临时保存此份fragment，随后向目标域pas提出黑名单同步请求
+8. 目标域pas发回两次加密后的黑名单，serverVS收到后转发给enclave
+9. enclave同步完成后发送ok提示给serverVS，serverVS收到ok后，将临时保存的、目标域是发来黑名单pas所在域的所有fragment全部发给enclave核验
+10. 把fragment发给enclave核验
+11. serverVS收到一个或多个核验结果，但是都一样，以下讨论对每一个收到的结果如何处理
+12. 将每一个pid的核验结果都写入区块链账本，通知源域pas
+13. 设备直接向目标域pas提出认证请求，目标域pas收到后查询账......
+
+
+
+
+
+## 究极测试开始
 先start test network部署demo，部署真有点慢
 以非enclave模式启动sgxInteract
 启动serverVS
