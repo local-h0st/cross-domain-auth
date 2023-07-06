@@ -163,10 +163,15 @@ func handleMsg(cipher []byte, contract *client.Contract, db *leveldb.DB) {
 		fmt.Println(domains)
 	// pas sig
 	case "fragment":
+		fragment_msg := msgs.FragmentMsg{}
+		if json.Unmarshal(basic_msg.Content, &fragment_msg) != nil {
+			fmt.Println("[fragment] json unmarshal failed.")
+			return
+		}
+
 		domain_index := -1
 		for k, domain := range domains {
-			if basic_msg.SenderID == domain.PasID {
-				// 通过pas id确认domain，有一点小问题：不同域的pas不许重名。可以通过规定pas命名必须包含domain name来解决
+			if fragment_msg.DestDomain == domain.Domain {
 				domain_index = k
 				break
 			}
@@ -180,6 +185,21 @@ func handleMsg(cipher []byte, contract *client.Contract, db *leveldb.DB) {
 				return
 			}
 		}
+
+		if isExist(contract, fragment_msg.PID) {
+			fmt.Println("[fragment] pid already exists.")
+			return
+		}
+
+		if db.Put([]byte(fragment_msg.PID), basic_msg.Content, nil) != nil {
+			fmt.Printf("[fragment] put record to db failed.")
+			return
+		}
+
+		if fragment_msg.Tag != sharedconfigs.NodeID {
+			return
+		}
+		// 非tag无需执行后续逻辑 TODO 没仔细看修改后的逻辑对不对
 
 		evaluateResult, err := contract.EvaluateTransaction("QueryOne", domains[domain_index].Domain)
 		if err != nil {
@@ -214,7 +234,7 @@ func handleMsg(cipher []byte, contract *client.Contract, db *leveldb.DB) {
 			// 最好重新调用fragment函数
 		} else {
 			// 这里逻辑不对，如果不是tag node就不需要验证本地黑名单记录，这里需要修改
-			fragment(basic_msg.Content, contract, db)
+			fragment(fragment_msg)
 		}
 
 	case "updateBlacklistTimestamp":
@@ -322,45 +342,30 @@ func handleMsg(cipher []byte, contract *client.Contract, db *leveldb.DB) {
 	}
 }
 
-func fragment(jsonmsg []byte, contract *client.Contract, db *leveldb.DB) {
-	fragment_msg := msgs.FragmentMsg{}
-	if json.Unmarshal(jsonmsg, &fragment_msg) != nil {
-		fmt.Println("[fragment] json unmarshal failed.")
-		return
+func fragment(fragment_msg msgs.FragmentMsg) {
+
+	basic_msg := msgs.BasicMsg{
+		Method:    "verifyID",
+		SenderID:  sharedconfigs.NodeID,
+		Content:   nil,
+		Signature: nil,
 	}
-	// 查询pid是否存在
-	if isExist(contract, fragment_msg.PID) {
-		fmt.Println("[fragment] pid already exists.")
-		return
-	}
-	// 存储信息
-	if db.Put([]byte(fragment_msg.PID), jsonmsg, nil) != nil {
-		fmt.Printf("[fragment] put record to db failed.")
-		return
-	}
-	if fragment_msg.Tag == sharedconfigs.NodeID {
-		basic_msg := msgs.BasicMsg{
-			Method:    "verifyID",
-			SenderID:  sharedconfigs.NodeID,
-			Content:   nil,
-			Signature: nil,
-		}
-		basic_msg.Content, _ = json.Marshal(msgs.VerifyMsg{
-			PID:        fragment_msg.PID,
-			CipherID:   fragment_msg.CipherID,
-			DestDomain: fragment_msg.DestDomain,
-		})
-		basic_msg.GenSign(PRVKEY)
-		data, _ := json.Marshal(basic_msg)
-		cipher := myrsa.EncryptMsg(data, []byte(sharedconfigs.EnclavePubkey))
-		sendMsg(sharedconfigs.EnclaveAddr, string(cipher))
-		for k := range domains {
-			if domains[k].Domain == fragment_msg.DestDomain {
-				domains[k].WaitQ = append(domains[k].WaitQ, fragment_msg)
-				break
-			}
+	basic_msg.Content, _ = json.Marshal(msgs.VerifyMsg{
+		PID:        fragment_msg.PID,
+		CipherID:   fragment_msg.CipherID,
+		DestDomain: fragment_msg.DestDomain,
+	})
+	basic_msg.GenSign(PRVKEY)
+	data, _ := json.Marshal(basic_msg)
+	cipher := myrsa.EncryptMsg(data, []byte(sharedconfigs.EnclavePubkey))
+	sendMsg(sharedconfigs.EnclaveAddr, string(cipher))
+	for k := range domains {
+		if domains[k].Domain == fragment_msg.DestDomain {
+			domains[k].WaitQ = append(domains[k].WaitQ, fragment_msg)
+			break
 		}
 	}
+
 }
 
 type PseudoRecord struct {
