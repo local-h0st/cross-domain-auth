@@ -35,6 +35,7 @@ const (
 
 var PRVKEY, PUBKEY, enPubkey []byte
 var domains []msgs.DomainRecord
+var need_verify_fragments []msgs.FragmentMsg
 
 func main() {
 	PRVKEY = []byte(sharedconfigs.ServerPrvkey)
@@ -170,13 +171,16 @@ func handleMsg(cipher []byte, contract *client.Contract, db *leveldb.DB) {
 		}
 
 		domain_index := -1
+		target_domain_index := -1
 		for k, domain := range domains {
-			if fragment_msg.DestDomain == domain.Domain {
+			if fragment_msg.OrigDomain == domain.Domain {
 				domain_index = k
-				break
+			}
+			if fragment_msg.DestDomain == domain.Domain {
+				target_domain_index = k
 			}
 		}
-		if domain_index == -1 {
+		if domain_index == -1 || target_domain_index == -1 {
 			fmt.Println("fragment: lack domain info, pls ask admin.")
 			return
 		} else {
@@ -199,8 +203,8 @@ func handleMsg(cipher []byte, contract *client.Contract, db *leveldb.DB) {
 		if fragment_msg.Tag != sharedconfigs.NodeID {
 			return
 		}
-		// 非tag无需执行后续逻辑 TODO 没仔细看修改后的逻辑对不对
 
+		// 非tag无需执行后续逻辑
 		evaluateResult, err := contract.EvaluateTransaction("QueryOne", domains[domain_index].Domain)
 		if err != nil {
 			fmt.Println("QueryOne: query ledger failed, domain timestamp info may be empty.")
@@ -222,19 +226,23 @@ func handleMsg(cipher []byte, contract *client.Contract, db *leveldb.DB) {
 			return
 		}
 		if latest.After(last_update) {
-			// 黑名单跟不上本地记录，需要请求更新
-			var request_update_msg msgs.BasicMsg
-			request_update_msg.Method = "requestUpdateBlacklist"
-			request_update_msg.SenderID = sharedconfigs.NodeID
-			// 先保存当前的fragment
+			// 黑名单跟不上本地记录，需要请求更新,先保存当前的fragment
 			// 消息指明自己的NODE ID，需要签名，通过pas的公钥加密后发送给pas
 			// 首先pas一定能知道所有的vs的地址，因此pas收到后随机向一台vs发送查询此node id的信息，包括server公钥、enclave公钥、server地址
 			// pas验证签名，通过后将黑名单用enclave公钥加密后再用server公钥加密，然后按照地址发送给server
-			// server收到后转发给enclave，然后将本地的时间戳设置和账本一样
+			// server收到后转发给enclave，然后将本地的时间戳设置和账本一样 TODO
+			// enclave收到后向server发送ok，server收到ok消息后把slice中该域的全部核验了
 			// 最好重新调用fragment函数
+			need_verify_fragments = append(need_verify_fragments, fragment_msg)
+			var request_update_msg msgs.BasicMsg
+			request_update_msg.Method = "requireSyncBlacklist"
+			request_update_msg.SenderID = sharedconfigs.NodeID
+			request_update_msg.GenSign([]byte(sharedconfigs.ServerPrvkey))
+			jsonstr, _ := json.Marshal(request_update_msg)
+			sendMsg(domains[target_domain_index].PasAddr, string(myrsa.EncryptMsg(jsonstr, domains[target_domain_index].PasPubkey)))
+
 		} else {
-			// 这里逻辑不对，如果不是tag node就不需要验证本地黑名单记录，这里需要修改
-			fragment(fragment_msg)
+			sendFragment(fragment_msg)
 		}
 
 	case "updateBlacklistTimestamp":
@@ -286,7 +294,7 @@ func handleMsg(cipher []byte, contract *client.Contract, db *leveldb.DB) {
 				return
 			}
 		}
-		// 转发给enclave
+		// content不修，转发给enclave
 		basic_msg.Method = "updateBlacklist"
 		basic_msg.SenderID = sharedconfigs.NodeID
 		basic_msg.Signature = nil
@@ -342,8 +350,7 @@ func handleMsg(cipher []byte, contract *client.Contract, db *leveldb.DB) {
 	}
 }
 
-func fragment(fragment_msg msgs.FragmentMsg) {
-
+func sendFragment(fragment_msg msgs.FragmentMsg) {
 	basic_msg := msgs.BasicMsg{
 		Method:    "verifyID",
 		SenderID:  sharedconfigs.NodeID,
@@ -359,13 +366,13 @@ func fragment(fragment_msg msgs.FragmentMsg) {
 	data, _ := json.Marshal(basic_msg)
 	cipher := myrsa.EncryptMsg(data, []byte(sharedconfigs.EnclavePubkey))
 	sendMsg(sharedconfigs.EnclaveAddr, string(cipher))
+	// 暂存
 	for k := range domains {
 		if domains[k].Domain == fragment_msg.DestDomain {
 			domains[k].WaitQ = append(domains[k].WaitQ, fragment_msg)
 			break
 		}
 	}
-
 }
 
 type PseudoRecord struct {
