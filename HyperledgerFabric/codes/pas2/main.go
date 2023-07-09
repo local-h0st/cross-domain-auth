@@ -84,6 +84,7 @@ func handleMsg(cipher []byte) {
 	}
 	switch basic_msg.Method {
 	case "requireSyncBlacklist":
+		// TODO
 
 	default:
 		fmt.Println(basic_msg.Method, ": unknown method.")
