@@ -7,7 +7,6 @@ import (
 	"myrsa"
 	"net"
 	sharedconfigs "sharedConfigs"
-	"time"
 )
 
 const (
@@ -21,8 +20,6 @@ const (
 var input string
 
 func main() {
-	// 必须先设置初始的时间戳，要不然在fragment核验的时候会query error，以后每次更新黑名单后再update timestamp
-	updateBlacklistTimestamp()
 
 	// 关于fragment，有多少台server就要send多少次，注意每次密钥都不同
 	fmt.Scanln(&input)
@@ -31,22 +28,16 @@ func main() {
 }
 
 func sendFragment() {
-	var bm msgs.BasicMsg
-	bm.Method = "fragment"
-	bm.SenderID = pasID
-	bm.Content, _ = json.Marshal(msgs.FragmentMsg{})
-	bm.GenSign([]byte(pasPrvkey))
-	bm_str, _ := json.Marshal(bm)
-	sendMsg(sharedconfigs.ServerAddr, string(myrsa.EncryptMsg(bm_str, []byte(sharedconfigs.ServerPubkey))))
-}
-
-func updateBlacklistTimestamp() {
-	var bm msgs.BasicMsg
-	bm.Method = "updateBlacklistTimestamp"
-	bm.SenderID = pasID
-	bm.Content, _ = json.Marshal(msgs.UpdateBlacklistTimestampMsg{
-		Domain:    domainName,
-		Timestamp: time.Now().Format("2006-01-02 15:04:05"),
+	bm := msgs.BasicMsg{
+		Method:   "fragment",
+		SenderID: pasID,
+	}
+	bm.Content, _ = json.Marshal(msgs.FragmentMsg{
+		Tag:        sharedconfigs.NodeID,
+		PID:        "ppppppppppppppid",
+		OrigDomain: "domainCali",
+		DestDomain: "domainHang",
+		// TODO
 	})
 	bm.GenSign([]byte(pasPrvkey))
 	bm_str, _ := json.Marshal(bm)

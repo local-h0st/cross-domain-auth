@@ -120,7 +120,8 @@ func verifyID(jsonmsg []byte) {
 	}
 }
 
-func updateBlacklist(jsonmsg []byte) {
+func updateBlacklist(cipher_blacklist []byte) {
+	jsonmsg := myrsa.DecryptMsg(cipher_blacklist, PRVKEY)
 	record := msgs.BlacklistRecord{}
 	json.Unmarshal(jsonmsg, &record)
 	index := -1

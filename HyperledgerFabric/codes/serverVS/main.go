@@ -77,7 +77,7 @@ func main() {
 	}
 	network := gw.GetNetwork(channelName)
 	contract := network.GetContract(chaincodeName)
-	// initLedger(contract)
+	initLedger(contract)
 
 	// 在链上公布此server的信息
 	var record PseudoRecord

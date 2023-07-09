@@ -7,6 +7,7 @@ import (
 	"msgs"
 	"myrsa"
 	"net"
+	"time"
 )
 
 const (
@@ -32,7 +33,15 @@ var serverCache []serverInfo = []serverInfo{serverInfo{
 	ServerPubkey:  "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCU+Q+LZjRCJyWxFMpUeTmdHvzl\nRyNCAsaWxUFI1W9mXywxcItmLmGLEG/tYVzYkjdgjqldvYZfi6q7JNdIYaM7EmXr\n5sgDWbfrH6eeXPe+dTu5dGTSvZ2K3Kvlo17kDKp/H4LcDcG3YpvAPQp/nII9ReWI\n56iq8mohZxb1eMgxPwIDAQAB\n-----END PUBLIC KEY-----\n",
 }} //  最开始有先验知识，域管理员在加入时可以得知
 
+var blacklist msgs.BlacklistRecord = msgs.BlacklistRecord{
+	Domain:    "domainHang",
+	BlackList: []string{"alice", "bob", "chen"},
+}
+
 func main() {
+	// 必须先设置初始的时间戳，要不然在fragment核验的时候会query error，以后每次更新黑名单后再update timestamp
+	updateBlacklistTimestamp()
+
 	ln, err := net.Listen("tcp", pasPort)
 	if err != nil {
 		panic(err)
@@ -84,9 +93,45 @@ func handleMsg(cipher []byte) {
 	}
 	switch basic_msg.Method {
 	case "requireSyncBlacklist":
-		// TODO .
-
+		bm := msgs.BasicMsg{
+			Method:   "syncBlacklist",
+			SenderID: pasID,
+		}
+		tmp, _ := json.Marshal(blacklist)
+		bm.Content = myrsa.EncryptMsg(tmp, []byte(serverCache[index].EnclavePubkey))
+		bm.GenSign([]byte(pasPrvkey))
+		bm_str, _ := json.Marshal(bm)
+		sendMsg(serverCache[index].ServerAddr, string(bm_str))
 	default:
 		fmt.Println(basic_msg.Method, ": unknown method.")
+	}
+}
+
+func updateBlacklistTimestamp() {
+	var bm msgs.BasicMsg
+	bm.Method = "updateBlacklistTimestamp"
+	bm.SenderID = pasID
+	bm.Content, _ = json.Marshal(msgs.UpdateBlacklistTimestampMsg{
+		Domain:    domainName,
+		Timestamp: time.Now().Format("2006-01-02 15:04:05"),
+	})
+	bm.GenSign([]byte(pasPrvkey))
+	bm_str, _ := json.Marshal(bm)
+	sendMsg(serverCache[0].ServerAddr, string(myrsa.EncryptMsg(bm_str, []byte(serverCache[0].ServerPubkey))))
+}
+
+func sendMsg(addr string, data string) error {
+	// 连接到指定IP和端口
+	conn, err := net.Dial("tcp", addr)
+	if err != nil {
+		return err
+	}
+	// 发送消息
+	n, err := fmt.Fprint(conn, data)
+	if err != nil {
+		return fmt.Errorf("[sendMsg] send data to %s failed.", addr)
+	} else {
+		fmt.Println("[sendMsg] total ", n, " bytes sent.")
+		return nil
 	}
 }
