@@ -65,7 +65,10 @@ type DomainRecord struct {
 	PasAddr                      string
 	PasPubkey                    []byte
 	BlacklistLastUpdateTimestamp string
-	WaitQ                        []FragmentMsg // 存储正在核验但是没有写入账本的Fragment记录
+	// 临时变量区
+	Tmp                 string
+	NeedVerifyFragments []FragmentMsg
+	WaitQ               []FragmentMsg // 存储正在核验但是没有写入账本的Fragment记录
 }
 
 type BlacklistRecord struct {

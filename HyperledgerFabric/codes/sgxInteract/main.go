@@ -122,10 +122,7 @@ func verifyID(jsonmsg []byte) {
 
 func updateBlacklist(jsonmsg []byte) {
 	record := msgs.BlacklistRecord{}
-	if json.Unmarshal(jsonmsg, &record) != nil {
-		fmt.Println("[updateBlacklist] json unmarshal failed.")
-		return
-	}
+	json.Unmarshal(jsonmsg, &record)
 	index := -1
 	for k := range blacklists {
 		if blacklists[k].Domain == record.Domain {
@@ -137,6 +134,16 @@ func updateBlacklist(jsonmsg []byte) {
 		blacklists = append(blacklists, record)
 	} else {
 		blacklists[index] = record
+	}
+	bm := msgs.BasicMsg{
+		Method:   "encUpdtBlklstDone",
+		SenderID: sharedconfigs.NodeEnclaveID,
+		Content:  []byte(record.Domain),
+	}
+	bm.GenSign(PRVKEY)
+	jsonmsg, _ = json.Marshal(bm)
+	if sendMsg(sharedconfigs.ServerAddr, string(myrsa.EncryptMsg(jsonmsg, []byte(vsPubkey)))) != nil {
+		fmt.Println("updateBlacklist: send failed.")
 	}
 }
 

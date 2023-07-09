@@ -24,7 +24,7 @@ func main() {
 		switch input {
 		case "q":
 			syncDomain("domainCali", "pasCali", "localhost:51234", []byte("-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDoL3urEUspR34r6AWvCdv5z4/M\nW/Kut1Is7gW2JroFr6u+fRnkQBfqrSbG2HPXVvX8YdeX/xaLKUdaxUMrq/zRkt1g\ngKBx3k2NlS3pG82T9DZszYyJj+GP1fyy40N+OetQqtnPc4Zy1sGmYsbnlxEfFkqT\nEXqsM5Vpg4oSnFz96wIDAQAB\n-----END PUBLIC KEY-----\n"))
-			syncDomain("domainFake", "", "", nil)
+			syncDomain("domainHang", "", "", nil)
 		case "w":
 			debugPrintAll()
 		case "e":
