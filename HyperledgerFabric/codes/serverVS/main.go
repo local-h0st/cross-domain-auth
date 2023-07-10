@@ -77,7 +77,7 @@ func main() {
 	}
 	network := gw.GetNetwork(channelName)
 	contract := network.GetContract(chaincodeName)
-	initLedger(contract)
+	// initLedger(contract)
 
 	// 在链上公布此server的信息
 	var record PseudoRecord
@@ -220,30 +220,33 @@ func handleMsg(cipher []byte, contract *client.Contract, db *leveldb.DB) {
 			return
 		}
 		last_update, err := time.Parse("2006-01-02 15:04:05", domains[domain_index].BlacklistLastUpdateTimestamp)
-		if err != nil {
+		if err != nil && domains[domain_index].BlacklistLastUpdateTimestamp != "" {
 			fmt.Println("blacklist timestamp on server is invalid.")
 			return
 		}
-		if latest.After(last_update) {
-			// 黑名单跟不上本地记录，需要请求更新,先保存当前的fragment和new timestamp
-			// 消息指明自己的NODE ID，需要签名，通过pas的公钥加密后发送给pas
-			// 首先pas一定能知道所有的vs的地址，因此pas收到后随机向一台vs发送查询此node id的信息，包括server公钥、enclave公钥、server地址
-			// pas验证签名，通过后将黑名单用enclave公钥加密后再用server公钥加密，然后按照地址发送给server
-			// server收到后转发给enclave
-			// enclave收到后向server发送ok，server收到ok消息后把slice中该域的全部核验，然后将本地的时间戳设置和账本一样
-			// 最好重新调用fragment函数
-			domains[target_domain_index].NeedVerifyFragments = append(domains[target_domain_index].NeedVerifyFragments, fragment_msg)
-			domains[target_domain_index].Tmp = rst.Valid
-			var request_update_msg msgs.BasicMsg
-			request_update_msg.Method = "requireSyncBlacklist"
-			request_update_msg.SenderID = sharedconfigs.NodeID
-			request_update_msg.GenSign([]byte(sharedconfigs.ServerPrvkey))
-			jsonstr, _ := json.Marshal(request_update_msg)
-			sendMsg(domains[target_domain_index].PasAddr, string(myrsa.EncryptMsg(jsonstr, domains[target_domain_index].PasPubkey)))
 
-		} else {
-			sendFragment(fragment_msg)
+		if err == nil {
+			if !latest.After(last_update) {
+				sendFragment(fragment_msg)
+				return
+			}
 		}
+		// 本地记录为""或者需要更新：
+		domains[target_domain_index].NeedVerifyFragments = append(domains[target_domain_index].NeedVerifyFragments, fragment_msg)
+		domains[target_domain_index].Tmp = rst.Valid
+		var request_update_msg msgs.BasicMsg
+		request_update_msg.Method = "requireSyncBlacklist"
+		request_update_msg.SenderID = sharedconfigs.NodeID
+		request_update_msg.GenSign([]byte(sharedconfigs.ServerPrvkey))
+		jsonstr, _ := json.Marshal(request_update_msg)
+		sendMsg(domains[target_domain_index].PasAddr, string(myrsa.EncryptMsg(jsonstr, domains[target_domain_index].PasPubkey)))
+		// 黑名单跟不上本地记录，需要请求更新,先保存当前的fragment和new timestamp
+		// 消息指明自己的NODE ID，需要签名，通过pas的公钥加密后发送给pas
+		// 首先pas一定能知道所有的vs的地址，因此pas收到后随机向一台vs发送查询此node id的信息，包括server公钥、enclave公钥、server地址
+		// pas验证签名，通过后将黑名单用enclave公钥加密后再用server公钥加密，然后按照地址发送给server
+		// server收到后转发给enclave
+		// enclave收到后向server发送ok，server收到ok消息后把slice中该域的全部核验，然后将本地的时间戳设置和账本一样
+		// 最好重新调用fragment函数
 
 	case "updateBlacklistTimestamp":
 		// pas自己黑名单更新后，让vs替自己更新账本上的timestamp
@@ -296,7 +299,7 @@ func handleMsg(cipher []byte, contract *client.Contract, db *leveldb.DB) {
 				return
 			}
 		}
-		if json.Unmarshal(basic_msg.Content, msgs.BlacklistRecord{}) != nil { // TODO
+		if json.Unmarshal(basic_msg.Content, &msgs.BlacklistRecord{}) != nil { // TODO
 			fmt.Println()
 			panic("blacklist json from target domain " + domains[domain_index].Domain + " invalid.")
 		}

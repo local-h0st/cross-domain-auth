@@ -74,6 +74,18 @@ type DomainRecord struct {
 type BlacklistRecord struct {
 	Domain    string
 	BlackList []string
+	CipherBlk []byte
+}
+
+func (br *BlacklistRecord) EncryBl(pubkey []byte) {
+	tmp, _ := json.Marshal(br.BlackList)
+	br.CipherBlk = myrsa.EncryptMsg(tmp, pubkey)
+	br.BlackList = nil
+}
+func (br *BlacklistRecord) DecryBl(prvkey []byte) {
+	json_text := myrsa.DecryptMsg(br.CipherBlk, prvkey)
+	json.Unmarshal(json_text, &br.BlackList)
+	br.CipherBlk = nil
 }
 
 type UpdateBlacklistTimestampMsg struct {

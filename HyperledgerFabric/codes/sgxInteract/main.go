@@ -120,26 +120,26 @@ func verifyID(jsonmsg []byte) {
 	}
 }
 
-func updateBlacklist(cipher_blacklist []byte) {
-	jsonmsg := myrsa.DecryptMsg(cipher_blacklist, PRVKEY)
-	record := msgs.BlacklistRecord{}
-	json.Unmarshal(jsonmsg, &record)
+func updateBlacklist(jsonmsg []byte) {
+	blk_record := msgs.BlacklistRecord{}
+	json.Unmarshal(jsonmsg, &blk_record)
+	blk_record.DecryBl([]byte(sharedconfigs.EnclavePrvkey))
 	index := -1
 	for k := range blacklists {
-		if blacklists[k].Domain == record.Domain {
+		if blacklists[k].Domain == blk_record.Domain {
 			index = k
 			break
 		}
 	}
 	if index == -1 {
-		blacklists = append(blacklists, record)
+		blacklists = append(blacklists, blk_record)
 	} else {
-		blacklists[index] = record
+		blacklists[index] = blk_record
 	}
 	bm := msgs.BasicMsg{
 		Method:   "encUpdtBlklstDone",
 		SenderID: sharedconfigs.NodeEnclaveID,
-		Content:  []byte(record.Domain),
+		Content:  []byte(blk_record.Domain),
 	}
 	bm.GenSign(PRVKEY)
 	jsonmsg, _ = json.Marshal(bm)

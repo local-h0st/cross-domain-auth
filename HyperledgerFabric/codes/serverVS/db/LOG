@@ -391,3 +391,80 @@
 21:50:15.380482 version@stat F·[0 2] S·936B[0B 936B] Sc·[0.00 0.00]
 21:50:15.396295 db@janitor F·4 G·0
 21:50:15.396429 db@open done T·19.016031ms
+=============== Jul 10, 2023 (CST) ===============
+12:12:57.899852 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+12:12:57.903842 version@stat F·[0 2] S·936B[0B 936B] Sc·[0.00 0.00]
+12:12:57.903866 db@open opening
+12:12:57.903912 journal@recovery F·1
+12:12:57.904262 journal@recovery recovering @91
+12:12:57.914610 memdb@flush created L0@93 N·1 S·235B "ppp..pid,v31":"ppp..pid,v31"
+12:12:57.914875 version@stat F·[1 2] S·1KiB[235B 936B] Sc·[0.25 0.00]
+12:12:57.934687 db@janitor F·5 G·0
+12:12:57.934737 db@open done T·30.859388ms
+=============== Jul 10, 2023 (CST) ===============
+12:30:25.736911 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+12:30:25.737124 version@stat F·[1 2] S·1KiB[235B 936B] Sc·[0.25 0.00]
+12:30:25.737139 db@open opening
+12:30:25.737180 journal@recovery F·1
+12:30:25.737788 journal@recovery recovering @94
+12:30:25.747509 memdb@flush created L0@96 N·1 S·235B "ppp..pid,v33":"ppp..pid,v33"
+12:30:25.747979 version@stat F·[2 2] S·1KiB[470B 936B] Sc·[0.50 0.00]
+12:30:25.762940 db@janitor F·6 G·0
+12:30:25.763018 db@open done T·25.86935ms
+=============== Jul 10, 2023 (CST) ===============
+12:34:56.739946 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+12:34:56.740493 version@stat F·[2 2] S·1KiB[470B 936B] Sc·[0.50 0.00]
+12:34:56.740510 db@open opening
+12:34:56.740572 journal@recovery F·1
+12:34:56.741604 journal@recovery recovering @97
+12:34:56.750617 memdb@flush created L0@99 N·1 S·235B "ppp..pid,v35":"ppp..pid,v35"
+12:34:56.751219 version@stat F·[3 2] S·1KiB[705B 936B] Sc·[0.75 0.00]
+12:34:56.764118 db@janitor F·7 G·0
+12:34:56.764226 db@open done T·23.705317ms
+=============== Jul 10, 2023 (CST) ===============
+13:10:39.014347 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+13:10:39.014608 version@stat F·[3 2] S·1KiB[705B 936B] Sc·[0.75 0.00]
+13:10:39.014622 db@open opening
+13:10:39.014667 journal@recovery F·1
+13:10:39.015278 journal@recovery recovering @100
+13:10:39.029141 memdb@flush created L0@102 N·1 S·235B "ppp..pid,v37":"ppp..pid,v37"
+13:10:39.031951 version@stat F·[4 2] S·1KiB[940B 936B] Sc·[1.00 0.00]
+13:10:39.045414 db@janitor F·8 G·0
+13:10:39.045555 db@open done T·30.921881ms
+13:10:39.045667 table@compaction L0·4 -> L1·0 S·940B Q·38
+13:10:39.050802 table@build created L1@105 N·1 S·235B "ppp..pid,v37":"ppp..pid,v37"
+13:10:39.050872 version@stat F·[0 3] S·1KiB[0B 1KiB] Sc·[0.00 0.00]
+13:10:39.058676 table@compaction committed F-3 S-705B Ke·0 D·3 T·12.953927ms
+13:10:39.058788 table@remove removed @102
+13:10:39.058824 table@remove removed @99
+13:10:39.058852 table@remove removed @96
+13:10:39.058892 table@remove removed @93
+=============== Jul 10, 2023 (CST) ===============
+13:12:50.149810 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+13:12:50.150045 version@stat F·[0 3] S·1KiB[0B 1KiB] Sc·[0.00 0.00]
+13:12:50.150057 db@open opening
+13:12:50.150100 journal@recovery F·1
+13:12:50.150776 journal@recovery recovering @103
+13:12:50.157913 memdb@flush created L0@106 N·1 S·235B "ppp..pid,v39":"ppp..pid,v39"
+13:12:50.158201 version@stat F·[1 3] S·1KiB[235B 1KiB] Sc·[0.25 0.00]
+13:12:50.169729 db@janitor F·6 G·0
+13:12:50.169779 db@open done T·19.712171ms
+=============== Jul 10, 2023 (CST) ===============
+13:14:13.654372 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+13:14:13.654585 version@stat F·[1 3] S·1KiB[235B 1KiB] Sc·[0.25 0.00]
+13:14:13.654596 db@open opening
+13:14:13.654639 journal@recovery F·1
+13:14:13.655054 journal@recovery recovering @107
+13:14:13.656362 version@stat F·[1 3] S·1KiB[235B 1KiB] Sc·[0.25 0.00]
+13:14:13.678768 db@janitor F·6 G·0
+13:14:13.678823 db@open done T·24.208473ms
+=============== Jul 10, 2023 (CST) ===============
+13:15:41.234862 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+13:15:41.235086 version@stat F·[1 3] S·1KiB[235B 1KiB] Sc·[0.25 0.00]
+13:15:41.235098 db@open opening
+13:15:41.235141 journal@recovery F·1
+13:15:41.235730 journal@recovery recovering @109
+13:15:41.242210 memdb@flush created L0@111 N·1 S·235B "ppp..pid,v41":"ppp..pid,v41"
+13:15:41.242728 version@stat F·[2 3] S·1KiB[470B 1KiB] Sc·[0.50 0.00]
+13:15:41.267406 db@janitor F·7 G·0
+13:15:41.267546 db@open done T·32.434725ms

@@ -97,11 +97,12 @@ func handleMsg(cipher []byte) {
 			Method:   "syncBlacklist",
 			SenderID: pasID,
 		}
-		tmp, _ := json.Marshal(blacklist)
-		bm.Content = myrsa.EncryptMsg(tmp, []byte(serverCache[index].EnclavePubkey))
+		tmp_blk := blacklist
+		tmp_blk.EncryBl([]byte(serverCache[index].EnclavePubkey))
+		bm.Content, _ = json.Marshal(tmp_blk)
 		bm.GenSign([]byte(pasPrvkey))
 		bm_str, _ := json.Marshal(bm)
-		sendMsg(serverCache[index].ServerAddr, string(bm_str))
+		sendMsg(serverCache[index].ServerAddr, string(myrsa.EncryptMsg(bm_str, []byte(serverCache[index].ServerPubkey))))
 	default:
 		fmt.Println(basic_msg.Method, ": unknown method.")
 	}
