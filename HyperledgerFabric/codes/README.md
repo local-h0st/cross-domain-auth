@@ -1,5 +1,77 @@
-## 流程
+## ideas to achieve
+1. 第二阶段判断pid是否valid并返回结果最好让链码来做而不是交给PASB来做
+2. ID等可以如下传入：`os.Getenv("SERVERID")`
+3. 关于公私钥，最好是`myrsa.GenRsaKey()`生成，最好实现运行初动态生成prvkey和pubkey，目前采取直接指定的办法连接vs和enclave。可以双方保存管理员公钥，双方分别生成公私钥匙，打印公钥，管理员用管理员私钥签名后分别发送给en和vs。enclave的key最好是在enclave内部生成。
+4. enclave要用EGo跑
+5. 注意防止某些全局变量并发不安全
+6. msgs某些结构的字段存在冗余
+7. msgs结构内可以加入随机数防止截获密文重放攻击
+8. initLedger单独放一个程序就行了，这样就不用每次重启整个区块链系统了
 
+## pre-works
+在sharedConfigs中预先配置好三对公私钥、端口等信息然后编译。之后搭建区块链账本环境并部署合约demo。当将demo部署上链后，由另一个程序完成initLedger。随后启动enclave，enclave监听EnclavePort，此时enclave内容为空，enclave仅接受来自server的消息
+
+接下来启动server，server和enclave成对出现。server先初始化leveldb，连接gateway，调用SubmitTransaction向账本写入此Node节点信息。然后向enclave发送`testingConnection`信息，之后立刻开始监听ServerPort。
+
+enclave收到`testingConnection`消息后向server返回`testingConnection`消息，server收到后输出connection ok，然后继续监听。此时说明server和enclave双向通信没有问题。
+
+接下来admin进程向server发送`syncDomain`消息，向server同步各个域的信息。
+
+接下来启动域pas，pas已知节点服务器的地址，首先向server发送`updateBlacklistTimestamp`消息，即使黑名单此时为空。因为域加入必须在账本上有记录可以查询，否则会影响后续逻辑。
+
+接下来可以进行正常的匿名认证操作了。
+
+__pre-works应该没有大问题，有的话记得微调__
+
+## records on the chain's ledger
+索引包含三种：pid、NodeID、domainName
+* pid：此记录是pid核验记录，所有字段均为原本含义。通常pid为不规则hash避免和以下两种特殊pid碰撞
+* NodeID：此记录为节点服务器的信息，Valid字段是一个json字符串，格式为msgs.ServerRecord{}
+* domainName：此记录是域黑名单最后更新时间戳，Valid字段是时间戳
+
+## 消息交互格式 伪代码
+### 发送端
+```
+bm := msgs.BasicMsg{}
+bm.Method = "xxx"
+bm.SenderID = "xxx"
+bm.Content = json.Marshal(msgs.OtherTypeMsg{
+    XXX: xxx
+    ...
+})  // or bm.Content = xxx if simple.
+bm.GenSign(prvkey)
+jsonstr, _ := json.Marshal(bm)
+cipher := myrsa.EncryptMsg(jsonstr, target_pubkey)
+sendMsg(target_addr, cipher)
+```
+### 接收端
+```
+// cipher received
+jsonstr := myrsa.DecryptMsg(cipher)
+bm := json.Unmarshal(jsonstr)
+bm.VerifySign()
+switch bm.Method{
+    case "xxx":
+        ...
+    case "xxx":
+        ...
+    default:
+        ...
+}
+```
+按照不同Method采用不同格式对Content进行反序列化，某些简单的情况下Content甚至不是json字符串，可以直接处理
+
+## msgs.BasicMsg.Method
+### pas -> server
+* server完成黑名单是否过期的检验
+
+
+### server -> enclave
+
+### enclave -> server
+
+
+## 究极测试流程(不完整)
 1. 部署链码
 2. 启动enclave
 3. 启动serverVS
@@ -18,46 +90,16 @@
 
 
 
-## 究极测试开始
-先start test network部署demo，部署真有点慢
-以非enclave模式启动sgxInteract
-启动serverVS
-输出信息暂时正常
-serverVS输出的pubkey和sgxInteract输出的pubkey一致
-测试不应该向sgxInteract发送任何消息
-运行genPayloadForServerVS
-serverVS两条消息都json unmarshal failed了
-但是没有panic，说明不是公钥的问题
-其他全停了，chaincode先跑着无所谓
 
-第二次测试重新按照上面的顺序来
-部署chaincode直接卡死
-太有所谓了一定要先停了chaincode
-serverVS输出[addPseudoRecordToLedger] result ==> []
-没问题肯定是nil，demo里面就这么写的
-好怪不应该有问题的，可能是当时没有停chaincode的缘故
-全停了重开试试
-没用，再查询试试
-也没用
-addPseudoRecordToLedger不执行啊
-算了下次再说今天先睡觉
+## 可以用来扯的话
+### interactSGX
 
-我靠我知道问题了！我去gateway-go的示例代码看了一下，写入Ledger应该是Submit而不是Evaluate，我就是chaincode怎么会写错呢，账本不修改只能serverVS出问题！【来自iPhone 半夜在GitHub上翻看自己代码发现不对劲然后在iPhone的Safari上登陆codeserver来这个markdown里面记录想法然后心满意足地睡觉明天准备毛概期末考试】
+在内存中维护一个黑名单slice，只有两个功能，一个是接受加密后的ID，check是否在黑名单内，另一个就是请求同步黑名单数据
 
-成功查到记录！
-先commit and push
-但是不显示pid也就是key，需要稍稍调一下输出
+运行时先生成密钥对，这一对keys是在enclave内部生成的，安全性很高，公布公钥pk。
 
-管理员在预设阶段自己需要生成一堆密钥，用于溯源时的身份认证。
-溯源时管理员向serverVS发送消息，用自己的私钥签名，serverVS收到消息就核验签名，如果通过那么就返回fragment
+PAS发送给VS的消息中就包含了pk加密的ID，由于VS无法得到sk因此安全
 
-第二阶段判断pid是否valid并返回结果最好让链码来做而不是交给PASB来做
+serverVS发送来verifyID,pk(json(challenge,update_flag,domain,pk(ID)),sign)，challenge是为了确定interactSGX没有被恶意程序替代。update_flag代表是否需要更新黑名单，这一个数据来自于VS查询链上账本，如果PAS的黑名单更新，则调用chaincode更新update_flag为true，如果PAS收到了来自interactSGX的黑名单同步请求，则调用chaincode更新update_flag为updated(false),verifyID表示此操作为验证ID,sign是代表确实VS发来的请求，而不是其他的恶意程序发来的请求。这样可以避免恶意程序询问某个ID是否在黑名单上造成信息泄漏
 
-发现true id解码不对，会不会是`[]byte`外面再套一个`[]byte`的原因？
-破案了，不知道脑子怎么想的在serverVS里面又对CipherID加密了一回，，无语
-
-///////////
-nice EGo 能用！
-之前的genPayloadForServer VS移到tools里面去了
-打算写个pas，再写个admin
-先push了再说
+至于为什么interSGX不采用sign的方式表明自己的身份，，好像也可以？不过这样的话服务器会多一次解密过程。那就改成签名吧。
