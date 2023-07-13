@@ -21,13 +21,36 @@ enclave收到`testingConnection`消息后向server返回`testingConnection`消�
 
 接下来可以进行正常的匿名认证操作了。
 
-__pre-works应该没有大问题，有的话记得微调__
+_pre-works应该没有大问题，有的话记得微调_
 
 ## records on the chain's ledger
 索引包含三种：pid、NodeID、domainName
 * pid：此记录是pid核验记录，所有字段均为原本含义。通常pid为不规则hash避免和以下两种特殊pid碰撞
 * NodeID：此记录为节点服务器的信息，Valid字段是一个json字符串，格式为msgs.ServerRecord{}
 * domainName：此记录是域黑名单最后更新时间戳，Valid字段是时间戳
+
+## server上的domain信息
+```
+type DomainRecord struct {
+	Domain                       string
+	PasID                        string
+	PasAddr                      string
+	PasPubkey                    []byte
+	BlacklistLastUpdateTimestamp string
+	// 临时变量区
+	Tmp                 string
+	NeedVerifyFragments []FragmentMsg
+	WaitQ               []FragmentMsg
+}
+
+var domains []msgs.DomainRecord
+```
+* WaitQ：被发送给enclave但是还没有收到来自enclave核验结果的fragment会被暂存在此slice中
+* NeedVerifyFragments：收到了fragment，但是黑名单需要先更新，所以fragment暂时不能被发送给enclave，这些fragment会暂存在此slice中
+
+对于以上两者，fragment均是按DestDomain来寻找这两个slice
+
+* Tmp：用于暂存从账本上查询得到的最后更新时间，当收到来自pas的黑名单并enclave成功更新后，Tmp的值会替换原来BlacklistLastUpdateTimestamp的值，然后Tmp置空
 
 ## 消息交互格式 伪代码
 ### 发送端
@@ -62,13 +85,24 @@ switch bm.Method{
 按照不同Method采用不同格式对Content进行反序列化，某些简单的情况下Content甚至不是json字符串，可以直接处理
 
 ## msgs.BasicMsg.Method
-### pas -> server
-* server完成黑名单是否过期的检验
+以下消息收到后均有核验签名的步骤，不过多赘述。
+### admin -> server
+* syncDomain：该消息类型用于向server初始化各个域的信息，Content为msgs.DomainRecord{}的json
+* getFragment：用于从数据库获取门限碎片，Content为目标pid
+* debugPrintAll：让server输出内部存储的信息，目前只输出server内已有的domains信息
+* queryLedger：server收到后会查询并输出账本的全部记录，Content为nil，本消息没有核验签名，需要添加。
 
+### pas -> server
+* fragment：该消息是OrigDomain的pas向某台节点服务器发送一份fragment信息，Content为msgs.FragmentMsg{}的json。server先查询账本pid是否存在，然后把Content保存到本地数据库中。如果自己不是tag指定的节点服务器，则没有后续动作，否则先根据DestDomain查询账本上域黑名单最后更新时间，并和本地缓存的时间进行比较。如果黑名单不用更新，则调用sendFragment函数（`verifyID`消息，向enclave发送fragment，并在DestDomain的WaitQ中暂存），等待enclave返回核验结果；如果需要更新，则暂存新时间戳和fragment（见 'server上的domain信息' 一节），然后向DestDomain的pas发送`requireSyncBlacklist`消息并等待回应。
+* updateBlacklistTimestamp：该消息是DestDomain向server发送黑名单信息，Content为msgs.UpdateBlacklistTimestampMsg{}的json。在域pas启动、域黑名单发生了变化时，域pas会向server发送这条消息，server替pas更新账本上该域黑名单的最新时间戳。
+* syncBlacklist：该消息是server向DestDomain的pas发送`requireSyncBlacklist`消息请求同步最新黑名单后，pas收到消息并向server发送回最新黑名单，Content是msgs.BlacklistRecord{}的json。为了保密，Content内的黑名单用EnclavePubkey做了加密，并封装了加密解密黑名单的方法（具体可参考msgs source code）。server验证格式正确后，Content原封不动，用`updateBlacklist`消息把Content转发给enclave。
 
 ### server -> enclave
 
 ### enclave -> server
+* encUpdtBlklstDone：该消息是enclave收到server转发过来的黑名单后，告知server内部黑名单更新完成，Content为更新完黑名单的域的域名。server收到后会更新本地黑名单最后一次更新时间的记录，然后把该域下NeedVerifyFragments中所有fragments全部调用sendFragment函数，即发送`verifyID`消息给enclave，并把所有fragments全部暂存到WaitQ里，然后清空NeedVerifyFragments。
+* verifyResult：该消息是enclave向server返回某个fragment的核验结果，Content为msgs.VerifyResultMsg{}的json。server收到后依据Domain找到domains中对应的domain，通过pid找到该domain里面WaitQ中那一条fragment，然后将该条fragment部分信息连同核验结果Result一同写入账本，然后清除WaitQ中的临时记录。
+* testingConnection：该消息是enclave向server发送的回复，是刚开始测试server和enclave通信是否正常流程的第二部分，Content为nil。
 
 
 ## 究极测试流程(不完整)

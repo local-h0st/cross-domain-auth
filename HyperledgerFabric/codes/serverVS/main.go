@@ -247,7 +247,6 @@ func handleMsg(cipher []byte, contract *client.Contract, db *leveldb.DB) {
 		// server收到后转发给enclave
 		// enclave收到后向server发送ok，server收到ok消息后把slice中该域的全部核验，然后将本地的时间戳设置和账本一样
 		// 最好重新调用fragment函数
-
 	case "updateBlacklistTimestamp":
 		// pas自己黑名单更新后，让vs替自己更新账本上的timestamp
 		domain_index := -1
@@ -332,7 +331,6 @@ func handleMsg(cipher []byte, contract *client.Contract, db *leveldb.DB) {
 			sendFragment(domains[domain_index].NeedVerifyFragments[k])
 		}
 		domains[domain_index].NeedVerifyFragments = nil
-
 	case "verifyResult":
 		if !basic_msg.VerifySign([]byte(sharedconfigs.EnclavePubkey)) {
 			fmt.Println("verifyResult: enclave sig invalid, reject.")
@@ -358,6 +356,9 @@ func handleMsg(cipher []byte, contract *client.Contract, db *leveldb.DB) {
 		}
 		if addPseudoRecordToLedger(contract, result_msg.Result, domains[d_ind].WaitQ[q_ind]) != nil {
 			fmt.Println("verifyResult: failed to put result to ledger, ")
+			// TODO failed怎么办呢？这个fragment还在WaitQ里面但是用于不会受到来自enclave的消息了。
+			// 解决办法可以找个特殊的时间把WaitQ的记录全部转移到Need里面，或者找个时间把WaitQ里面的再次sendFragment
+			// 或者再开一个slice，专门用来存储这些已经有核验结果但是未能写入账本的fragment
 		}
 		domains[d_ind].WaitQ[q_ind] = msgs.FragmentMsg{} // 清除记录
 	case "testingConnection":

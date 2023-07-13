@@ -5,7 +5,8 @@
 这个项目是做跨域认证的，基于Hyperledger Fabric 2.5，采用Intel SGX作为Truetsed Execution Environment的硬件支持。整个项目需要编写chaincode、VS上的服务端程序、PAS上的服务端程序，device上的用户程序Client App。由于服务端程序涉及到调用智能合约，因此也属于DApp的范畴，这部分需要用到相关的go sdk开发（现采用fabric-gateway）
 
 __TODO:__
-* [ ] 合并README，很多没用的话都删掉，梳理逻辑
+* [ ] 合并README，梳理逻辑，整理各种Method（server源码中出现的已经整理完毕，接下来整理其他的）
+* [ ] 垃圾话删一些，有用的别删，坑别删，万一以后有用
 * [ ] 继续开发chaincode，FabApp4VS，命名规则最好统一
 * [ ] 有必要看一看Key Concepts，以及test_network的tutorial细节，另外目录重命名了，遇到问题了再慢慢改
 
@@ -53,5 +54,3 @@ __References:__
 * [sendMsg](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/tools/sendMsg)：用于向指定端口发送指定消息，通常用来向FabApp4VS发送消息，测试FabApp4VS功能是否正常
 * [genJSON](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/tools/genJSON)：产生指定格式的json字符串用于测试，通过sendMsg发给FabApp4VS
 * [atcc](https://github.com/local-h0st/cross-domain-auth/tree/master/HyperledgerFabric/codes/atcc)：照着教程魔改的100%能正常工作的链码，用于测试某些脚本能否正确部署这些自己开发的链码
-
-
