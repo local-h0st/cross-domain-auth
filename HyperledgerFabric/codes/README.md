@@ -1,3 +1,18 @@
+## 接下来的工作重点
+还有一部分没做完测试，pas功能没写全。重中之重是考虑整个系统搭建，是真实情况的搭建！
+
+serverVS这是跑在VS上的，不过反正都是跑在一个容器内，用Fabric SDK去调用chaincode，因此貌似跑在哪里都行。如果要限定必须在VS上跑，可以在这个程序里写检测，因为在chaincode里面检测比较麻烦。感觉限定在peer上跑更安全，虽然说不出哪里更安全。
+
+请求调用chaincode的话智能合约会验证请求者的代码是否被篡改，因此如果想通过修改此DApp攻击的话，调用chaincode会在chaincode端失败。虽然我还没写这个核验方法。
+
+另外本身攻击者无法左右sgx端返回结果
+
+因为需要在peer上运行这个进程，因此需要先确定可行性，即如何找出运行chaincode的peer、如何进入容器、如何安装此进程、如何与该进程交互等等。我决定先拿atcc做个测试。
+
+翻了一圈，发现devMod下不会新开docker容器，那么测试以后再说，先把代码写出来
+
+有个问题，fabric-sdk-go支持到2.2版的fabric，我用的是2.5版本的，不知道会不会有兼容性问题
+
 ## ideas to achieve
 1. 第二阶段判断pid是否valid并返回结果最好让链码来做而不是交给PASB来做
 2. ID等可以如下传入：`os.Getenv("SERVERID")`
@@ -7,6 +22,7 @@
 6. msgs某些结构的字段存在冗余
 7. msgs结构内可以加入随机数防止截获密文重放攻击
 8. initLedger单独放一个程序就行了，这样就不用每次重启整个区块链系统了
+9. panic全部catch了，影响稳定性，尤其是myrsa里面的
 
 ## pre-works
 在sharedConfigs中预先配置好三对公私钥、端口等信息然后编译。之后搭建区块链账本环境并部署合约demo。当将demo部署上链后，由另一个程序完成initLedger。随后启动enclave，enclave监听EnclavePort，此时enclave内容为空，enclave仅接受来自server的消息
@@ -97,7 +113,13 @@ switch bm.Method{
 * updateBlacklistTimestamp：该消息是DestDomain向server发送黑名单信息，Content为msgs.UpdateBlacklistTimestampMsg{}的json。在域pas启动、域黑名单发生了变化时，域pas会向server发送这条消息，server替pas更新账本上该域黑名单的最新时间戳。
 * syncBlacklist：该消息是server向DestDomain的pas发送`requireSyncBlacklist`消息请求同步最新黑名单后，pas收到消息并向server发送回最新黑名单，Content是msgs.BlacklistRecord{}的json。为了保密，Content内的黑名单用EnclavePubkey做了加密，并封装了加密解密黑名单的方法（具体可参考msgs source code）。server验证格式正确后，Content原封不动，用`updateBlacklist`消息把Content转发给enclave。
 
+### server -> pas
+* requireSyncBlacklist：该消息是server缺少pas域黑名单信息或需要更新时，向pas发送此请求，Content为nil。pas收到后根据SenderID用对应的EnclavePubkey对本域黑名单加密，然后放在`syncBlacklist`消息中发送给server。
+
 ### server -> enclave
+* verifyID：该消息是server收到pas发来的fragment后，把fragment转发给enclave进行核验，Content为msgs.VerifyMsg{}的json。enclave收到后在内存中核验并把结果valid/invalid通过`verifyResult`消息发回给server
+* updateBlacklist：该消息是来自server转发过来的黑名单信息，Content为msgs.BlacklistRecord{}的json。enclave收到后解密并更新内存中缓存的对应域的黑名单，然后向server发送`encUpdtBlklstDone`消息，通知server黑名单更新完毕。
+* testingConnection：该消息是server向enclave发送的测试请求，是刚开始测试server和enclave通信是否正常流程的第一部分，Content为nil。
 
 ### enclave -> server
 * encUpdtBlklstDone：该消息是enclave收到server转发过来的黑名单后，告知server内部黑名单更新完成，Content为更新完黑名单的域的域名。server收到后会更新本地黑名单最后一次更新时间的记录，然后把该域下NeedVerifyFragments中所有fragments全部调用sendFragment函数，即发送`verifyID`消息给enclave，并把所有fragments全部暂存到WaitQ里，然后清空NeedVerifyFragments。
@@ -122,7 +144,11 @@ switch bm.Method{
 
 
 
-
+## 踩坑
+1. sendMsg可以发送`string`或者`[]byte`，但是这两者是不一样的，发送`string`收到的`[]byte`就是`string`对应的`[]byte`，但是发送`[]byte`是真的发送一段长得和`[]byte`一模一样的`string`。这很难评，就因为这个原因我之前加密完的数据发过来直接解密不了panic。
+2. 如果引入toolPackages里面自己写的package，必须要手动修改go.mod，添加记录
+3. testNetworkStart一键部署链码失败的话有可能是缺少func main()，也有可能没有vendor（如果报错Error: failed to normalize chaincode path: 'go list' failed）：参考[这里](https://hyperledger-fabric.readthedocs.io/en/release-2.5/chaincode4ade.html)
+4. 缺依赖可以尝试go get解决
 
 
 ## 可以用来扯的话
