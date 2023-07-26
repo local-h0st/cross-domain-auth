@@ -1,4 +1,6 @@
 # Project cross-domain-auth - AlternateWorld
+😭没进决赛，此项目正式终止，RIP
+
 🎉初赛作品提交正式截止，目前结果尚未揭晓。
 🎉首先庆祝第一阶段校赛顺利结束！
 ## OverView
@@ -12,6 +14,7 @@ __TODO:__
 * [ ] 有必要看一看Key Concepts，以及test_network的tutorial细节，另外目录重命名了，遇到问题了再慢慢改
 
 __References:__
+* [这个不错](https://yeasy.gitbook.io/blockchain_guide/09_fabric_deploy/start_local)
 * 🔰Hyperledger Fabric👉[官方文档](https://hyperledger-fabric.readthedocs.io/en/release-2.5/)。一定要看release-2.5版的！
 * [fabric-samples仓库](https://github.com/hyperledger/fabric-samples)，含多项可供参考的示例代码包括chaincode和Fabric App，记得切换branch
 * [Key Concepts](https://hyperledger-fabric.readthedocs.io/en/release-2.5/key_concepts.html)
