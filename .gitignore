@@ -10,7 +10,3 @@
 .ssh/
 .sudo_as_admin_successful
 .wget-hsts
-HyperledgerFabric/fabric-samples/
-HyperledgerFabric/fabric/
-go/
-ctf_test/
